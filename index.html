@@ -1,0 +1,4141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Maya Groom Pro - Mobile Pet Grooming Appointments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #F5EAD8;
+            --bg-secondary: #FFF8ED;
+            --bg-tertiary: #E8DCC8;
+            --text-primary: #2A1F14;
+            --text-secondary: #5A4A3A;
+            --text-tertiary: #8A7A6A;
+            --accent-primary: #C7632C;
+            --accent-secondary: #E88D5A;
+            --accent-dark: #9A4A1F;
+            --border: #D4C5B3;
+            --success: #6B9F7F;
+            --warning: #D89545;
+            --danger: #D94A3D;
+        }
+
+        .dark {
+            --bg-primary: #1A1410;
+            --bg-secondary: #2A2218;
+            --bg-tertiary: #3A3028;
+            --text-primary: #F5EAD8;
+            --text-secondary: #D4C5B3;
+            --text-tertiary: #A89682;
+            --border: #4A3F35;
+        }
+
+        * {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .mono {
+            font-family: 'DM Mono', monospace;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border-radius: 0.75rem;
+            border: 1.5px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            animation: fadeIn 0.2s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 1.25rem;
+            max-width: 90%;
+            width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-tertiary);
+            border: 1.5px solid transparent;
+        }
+
+        .calendar-day:hover {
+            border-color: var(--accent-secondary);
+            background: var(--bg-secondary);
+        }
+
+        .calendar-day.selected {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .calendar-day.has-appointments {
+            border-color: var(--accent-primary);
+        }
+
+        .appointment-slot {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1.5px solid var(--border);
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .appointment-slot:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .tab-button {
+            padding: 0.875rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-tertiary);
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-button.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+
+        .badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-primary {
+            background: rgba(236, 72, 153, 0.1);
+            color: var(--accent-primary);
+        }
+
+        /* Week Navigation Styles */
+        .week-days-nav {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.125rem;
+            margin-bottom: 1rem;
+            padding: 0.25rem 0;
+        }
+
+        .week-day-item {
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0.125rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .week-day-label {
+            font-size: 0.625rem;
+            color: var(--text-tertiary);
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+
+        .week-day-number {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 0.938rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .week-day-item:hover .week-day-number {
+            background: var(--bg-tertiary);
+        }
+
+        .week-day-item.selected .week-day-number {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .week-day-item.today .week-day-number {
+            border: 2px solid var(--accent-primary);
+        }
+
+        .week-day-item.selected.today .week-day-number {
+            border: none;
+        }
+
+        @media (max-width: 640px) {
+            .week-day-number {
+                width: 32px;
+                height: 32px;
+                font-size: 0.875rem;
+            }
+
+            .week-day-label {
+                font-size: 0.563rem;
+            }
+        }
+
+        /* Single Day Timeline */
+        .day-timeline {
+            position: relative;
+            overflow-y: auto;
+            max-height: 70vh;
+            min-height: 400px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .timeline-hour {
+            height: 60px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            padding-left: 4.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .timeline-hour:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .timeline-hour-label {
+            position: absolute;
+            left: 0;
+            top: 4px;
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            font-family: 'DM Mono', monospace;
+            width: 3.5rem;
+            text-align: right;
+            padding-right: 0.5rem;
+        }
+
+        .timeline-appointment {
+            position: absolute;
+            left: 4.5rem;
+            right: 0.5rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3B82F6;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            cursor: move;
+            transition: all 0.2s;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .timeline-appointment:hover {
+            background: rgba(59, 130, 246, 0.15);
+            transform: translateX(2px);
+        }
+
+        .timeline-appointment.dragging {
+            opacity: 0.7;
+            z-index: 1000;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline-appointment-title {
+            font-weight: 600;
+            color: #3B82F6;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .checkbox-custom {
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox-custom.checked {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        @media (max-width: 640px) {
+            .modal-content {
+                max-width: 95%;
+                margin: 1rem;
+            }
+
+            .btn {
+                padding: 0.625rem 1.25rem;
+                font-size: 0.938rem;
+            }
+
+            .week-timeline {
+                grid-template-columns: 50px repeat(7, 1fr);
+            }
+
+            .timeline-day-column {
+                min-width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="sticky top-0 z-50" style="background: var(--bg-secondary); border-bottom: 1px solid var(--border);">
+        <div class="px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div id="headerLogo">
+                    <!-- Logo will be dynamically inserted here -->
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openSettings()" class="p-2 rounded-lg hover:bg-opacity-10" style="background: var(--bg-tertiary);">
+                    <i class="fas fa-gear text-lg"></i>
+                </button>
+                <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-opacity-10" style="background: var(--bg-tertiary);">
+                    <i class="fas fa-moon text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-4 mt-6">
+        <div class="flex gap-1 overflow-x-auto" style="border-bottom: 1px solid var(--border);">
+            <button class="tab-button active" onclick="switchTab('schedule')">
+                <i class="fas fa-calendar-week mr-2"></i>Schedule
+            </button>
+            <button class="tab-button" onclick="switchTab('clients')">
+                <i class="fas fa-users mr-2"></i>Clients
+            </button>
+            <button class="tab-button" onclick="switchTab('services')">
+                <i class="fas fa-scissors mr-2"></i>Services
+            </button>
+            <button class="tab-button" onclick="switchTab('waitlist')">
+                <i class="fas fa-clock mr-2"></i>Waitlist
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="px-4 py-6">
+        <!-- Schedule View -->
+        <div id="scheduleView" class="tab-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold cursor-pointer hover:opacity-70 transition-opacity" id="currentMonthYear" onclick="toggleMonthView()"></h2>
+                <div class="flex gap-2">
+                    <button class="btn btn-secondary btn-sm" onclick="exportAllAppointments()" title="Export all appointments to calendar">
+                        <i class="fas fa-calendar-arrow-down mr-2"></i>Export All
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="openNewAppointmentModal()">
+                        <i class="fas fa-plus mr-2"></i>New
+                    </button>
+                </div>
+            </div>
+
+            <!-- Collapsible Month View -->
+            <div id="monthViewCollapse" class="hidden mb-6">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <button onclick="previousMonth()" class="p-2 rounded-lg hover:bg-opacity-10" style="background: var(--bg-tertiary);">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <h3 class="text-lg font-bold mono" id="calendarMonth"></h3>
+                        <button onclick="nextMonth()" class="p-2 rounded-lg hover:bg-opacity-10" style="background: var(--bg-tertiary);">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="calendar-grid mb-2">
+                        <div class="text-center text-xs font-semibold p-2" style="color: var(--text-tertiary);">Sun</div>
+                        <div class="text-center text-xs font-semibold p-2" style="color: var(--text-tertiary);">Mon</div>
+                        <div class="text-center text-xs font-semibold p-2" style="color: var(--text-tertiary);">Tue</div>
+                        <div class="text-center text-xs font-semibold p-2" style="color: var(--text-tertiary);">Wed</div>
+                        <div class="text-center text-xs font-semibold p-2" style="color: var(--text-tertiary);">Thu</div>
+                        <div class="text-center text-xs font-semibold p-2" style="color: var(--text-tertiary);">Fri</div>
+                        <div class="text-center text-xs font-semibold p-2" style="color: var(--text-tertiary);">Sat</div>
+                    </div>
+
+                    <div class="calendar-grid" id="calendarDays"></div>
+                </div>
+            </div>
+
+            <!-- Week Timeline View -->
+            <div class="card" style="padding: 1rem;">
+                <div class="flex justify-between items-center mb-3">
+                    <button onclick="previousWeek()" class="p-2 rounded-lg hover:bg-opacity-10" style="background: var(--bg-tertiary);">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h3 class="text-base font-bold mono" id="weekRange"></h3>
+                    <button onclick="nextWeek()" class="p-2 rounded-lg hover:bg-opacity-10" style="background: var(--bg-tertiary);">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Week Navigation -->
+                <div class="week-days-nav" id="weekDaysNav"></div>
+
+                <!-- Single Day Timeline -->
+                <div class="day-timeline" id="dayTimeline"></div>
+            </div>
+        </div>
+
+        <!-- Clients View -->
+        <div id="clientsView" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Clients & Pets</h2>
+                <button class="btn btn-primary" onclick="openNewClientModal()">
+                    <i class="fas fa-plus mr-2"></i>New Client
+                </button>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="clientsList"></div>
+        </div>
+
+        <!-- Services View -->
+        <div id="servicesView" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Services & Items</h2>
+                <div class="flex gap-2">
+                    <button class="btn btn-secondary btn-sm" onclick="openNewServiceModal()">
+                        <i class="fas fa-scissors mr-2"></i>New Service
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="openNewItemModal()">
+                        <i class="fas fa-box mr-2"></i>New Item
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="servicesList"></div>
+        </div>
+
+        <!-- Waitlist View -->
+        <div id="waitlistView" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Waitlist</h2>
+                <button class="btn btn-primary" onclick="openAddToWaitlistModal()">
+                    <i class="fas fa-plus mr-2"></i>Add to Waitlist
+                </button>
+            </div>
+
+            <div id="waitlistContainer"></div>
+        </div>
+    </main>
+
+    <script>
+        // Data Storage
+        let appointments = [];
+        let clients = [];
+        let services = [];
+        let items = [];
+        let waitlist = [];
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let weekStartDate = getWeekStart(new Date());
+
+        // Settings
+        let settings = {
+            businessName: 'Maya Groom Pro',
+            abn: '',
+            phone: '',
+            email: '',
+            address: '',
+            use24HourClock: false,
+            gstEnabled: true,
+            gstRate: 0.10,
+            logoDataUrl: '',
+            messageTemplates: {
+                booking: "Hi {clientFirstName}!\n\nYour grooming appointment with {businessName} has been confirmed:\n\nDate: {date}\nTime: {time}\nPets: {pets}\n\nWe'll see you then! Reply STOP to cancel.",
+                confirmation: "Hi {clientFirstName}!\n\nThis is a confirmation for your appointment with {businessName}:\n\nDate: {date}\nTime: {time}\nPets: {pets}\n\nSee you soon!",
+                reminder: "Hi {clientFirstName}!\n\nReminder: You have an appointment with {businessName} tomorrow:\n\nDate: {date}\nTime: {time}\nPets: {pets}\n\nSee you then!"
+            }
+        };
+
+        // Helper Functions
+        function getWeekStart(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day;
+            return new Date(d.setDate(diff));
+        }
+
+        function formatTime(date) {
+            if (settings.use24HourClock) {
+                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            } else {
+                return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            }
+        }
+
+        function calculateGST(amount) {
+            if (!settings.gstEnabled) return 0;
+            return amount * settings.gstRate;
+        }
+
+        function calculateTotalWithGST(amount) {
+            return amount + calculateGST(amount);
+        }
+
+        // Initialize with sample data
+        function initializeData() {
+            // Sample services
+            services = [
+                { id: 1, name: 'Full Grooming', duration: 120, price: 85, description: 'Bath, haircut, nail trim, ear cleaning', type: 'service' },
+                { id: 2, name: 'Bath & Brush', duration: 60, price: 45, description: 'Bath, brush out, nail trim', type: 'service' },
+                { id: 3, name: 'Nail Trim', duration: 15, price: 15, description: 'Quick nail trim service', type: 'service' },
+                { id: 4, name: 'De-shedding Treatment', duration: 90, price: 65, description: 'Special treatment for heavy shedders', type: 'service' }
+            ];
+
+            // Sample items
+            items = [
+                { id: 1, name: 'Flea Treatment', price: 25, description: 'Premium flea & tick treatment', type: 'item' },
+                { id: 2, name: 'Teeth Cleaning', price: 35, description: 'Dental cleaning service', type: 'item' }
+            ];
+
+            // Sample clients
+            clients = [
+                {
+                    id: 1,
+                    name: 'Sarah Johnson',
+                    email: 'sarah.j@email.com',
+                    phone: '0412 345 678',
+                    address: '123 Oak Street, Apt 4B, Sydney NSW 2000',
+                    pets: [
+                        { name: 'Max', breed: 'Golden Retriever', age: 3, notes: 'Very friendly, loves treats' }
+                    ]
+                },
+                {
+                    id: 2,
+                    name: 'Mike Chen',
+                    email: 'mchen@email.com',
+                    phone: '0423 456 789',
+                    address: '456 Maple Avenue, Melbourne VIC 3000',
+                    pets: [
+                        { name: 'Luna', breed: 'Poodle', age: 2, notes: 'Anxious around clippers' },
+                        { name: 'Charlie', breed: 'Poodle', age: 5, notes: 'Very calm' }
+                    ]
+                }
+            ];
+
+            // Sample appointments
+            const today = new Date();
+            appointments = [
+                {
+                    id: 1,
+                    clientId: 1,
+                    pets: [{ name: 'Max', items: [{ id: 1, type: 'service' }] }],
+                    date: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0),
+                    status: 'confirmed',
+                    notes: 'First time client'
+                },
+                {
+                    id: 2,
+                    clientId: 2,
+                    pets: [{ name: 'Luna', items: [{ id: 2, type: 'service' }] }],
+                    date: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0),
+                    status: 'confirmed',
+                    notes: ''
+                }
+            ];
+
+            // Sample waitlist
+            waitlist = [];
+
+            updateHeaderLogo();
+            renderWeekTimeline();
+            renderCalendar();
+            renderClients();
+            renderServices();
+            renderWaitlist();
+            updateMonthYearDisplay();
+        }
+
+        // Month View Toggle
+        function toggleMonthView() {
+            const monthView = document.getElementById('monthViewCollapse');
+            monthView.classList.toggle('hidden');
+        }
+
+        function updateMonthYearDisplay() {
+            const monthYear = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            document.getElementById('currentMonthYear').textContent = monthYear;
+        }
+
+        // Calendar Functions
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('calendarMonth').textContent =
+                currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+
+            // Empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                calendarDays.appendChild(emptyDay);
+            }
+
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+
+                const date = new Date(year, month, day);
+                const hasAppointments = appointments.some(apt =>
+                    apt.date.toDateString() === date.toDateString()
+                );
+
+                if (hasAppointments) {
+                    dayElement.classList.add('has-appointments');
+                }
+
+                if (date.toDateString() === selectedDate.toDateString()) {
+                    dayElement.classList.add('selected');
+                }
+
+                dayElement.innerHTML = `
+                    <span class="text-sm font-semibold">${day}</span>
+                    ${hasAppointments ? '<div class="w-1 h-1 rounded-full mt-1" style="background: var(--accent-primary);"></div>' : ''}
+                `;
+
+                dayElement.onclick = () => {
+                    selectedDate = date;
+                    weekStartDate = getWeekStart(date);
+                    renderCalendar();
+                    renderWeekTimeline();
+                };
+
+                calendarDays.appendChild(dayElement);
+            }
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+            updateMonthYearDisplay();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+            updateMonthYearDisplay();
+        }
+
+        // Week Timeline Functions
+        function renderWeekTimeline() {
+            renderWeekNavigation();
+            renderDayTimeline();
+        }
+
+        function renderWeekNavigation() {
+            const container = document.getElementById('weekDaysNav');
+            container.innerHTML = '';
+
+            const weekEnd = new Date(weekStartDate);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+
+            document.getElementById('weekRange').textContent =
+                `${weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+            const today = new Date();
+            const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+            for (let i = 0; i < 7; i++) {
+                const dayDate = new Date(weekStartDate);
+                dayDate.setDate(dayDate.getDate() + i);
+
+                const dayItem = document.createElement('div');
+                dayItem.className = 'week-day-item';
+
+                if (dayDate.toDateString() === today.toDateString()) {
+                    dayItem.classList.add('today');
+                }
+
+                if (dayDate.toDateString() === selectedDate.toDateString()) {
+                    dayItem.classList.add('selected');
+                }
+
+                dayItem.innerHTML = `
+                    <div class="week-day-label">${dayLabels[dayDate.getDay()]}</div>
+                    <div class="week-day-number">${dayDate.getDate()}</div>
+                `;
+
+                dayItem.onclick = () => {
+                    selectedDate = new Date(dayDate);
+                    renderWeekNavigation();
+                    renderDayTimeline();
+                };
+
+                container.appendChild(dayItem);
+            }
+        }
+
+        function renderDayTimeline() {
+            const container = document.getElementById('dayTimeline');
+            container.innerHTML = '';
+
+            // Create timeline for 24 hours (0-23)
+            for (let hour = 0; hour < 24; hour++) {
+                const hourDiv = document.createElement('div');
+                hourDiv.className = 'timeline-hour';
+                hourDiv.dataset.hour = hour;
+
+                const hourLabel = document.createElement('div');
+                hourLabel.className = 'timeline-hour-label';
+
+                if (settings.use24HourClock) {
+                    hourLabel.textContent = `${hour.toString().padStart(2, '0')}:00`;
+                } else {
+                    const period = hour >= 12 ? 'PM' : 'AM';
+                    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                    hourLabel.textContent = `${displayHour} ${period}`;
+                }
+
+                // Click to create appointment
+                hourDiv.onclick = (e) => {
+                    if (e.target === hourDiv || e.target === hourLabel) {
+                        createAppointmentAtTime(hour, 0);
+                    }
+                };
+
+                hourDiv.appendChild(hourLabel);
+                container.appendChild(hourDiv);
+            }
+
+            // Add appointments for selected day
+            const dayAppointments = appointments.filter(apt =>
+                apt.date.toDateString() === selectedDate.toDateString()
+            );
+
+            dayAppointments.forEach(apt => {
+                const client = clients.find(c => c.id === apt.clientId);
+                const hour = apt.date.getHours();
+                const minute = apt.date.getMinutes();
+
+                const totalMinutes = apt.pets.reduce((sum, pet) => {
+                    return sum + pet.items.reduce((itemSum, item) => {
+                        const serviceOrItem = [...services, ...items].find(s => s.id === item.id && s.type === item.type);
+                        return itemSum + (serviceOrItem?.duration || 0);
+                    }, 0);
+                }, 0);
+
+                // Calculate position: each hour block is 60px
+                const topPosition = (hour * 60) + (minute * 60 / 60);
+                const height = Math.max((totalMinutes * 60 / 60), 40);
+
+                const aptDiv = document.createElement('div');
+                aptDiv.className = 'timeline-appointment';
+                aptDiv.style.top = `${topPosition}px`;
+                aptDiv.style.height = `${height}px`;
+                aptDiv.dataset.aptId = apt.id;
+
+                const petNames = apt.pets.map(p => p.name).join(', ');
+
+                aptDiv.innerHTML = `
+                    <div class="timeline-appointment-title">${client?.name || 'Unknown'}</div>
+                    <div class="text-xs opacity-90">${formatTime(apt.date)}</div>
+                    <div class="text-xs opacity-80 truncate"><i class="fas fa-dog mr-1"></i>${petNames}</div>
+                `;
+
+                // Make appointment draggable
+                makeDraggable(aptDiv, apt.id);
+
+                container.appendChild(aptDiv);
+            });
+        }
+
+        function createAppointmentAtTime(hour, minute) {
+            const appointmentDate = new Date(selectedDate);
+            appointmentDate.setHours(hour, minute, 0, 0);
+
+            openNewAppointmentModal();
+
+            // Pre-fill the date and time
+            setTimeout(() => {
+                document.getElementById('aptDate').value = selectedDate.toISOString().split('T')[0];
+                document.getElementById('aptTime').value = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            }, 100);
+        }
+
+        let dragState = {
+            isDragging: false,
+            element: null,
+            aptId: null,
+            startY: 0,
+            startTop: 0
+        };
+
+        function makeDraggable(element, aptId) {
+            let longPressTimer;
+            let startY;
+            let startTop;
+            let hasMoved = false;
+            let isDragMode = false;
+            let handlers = { move: null, end: null };
+
+            const cleanup = () => {
+                if (handlers.move) {
+                    document.removeEventListener('mousemove', handlers.move);
+                    document.removeEventListener('touchmove', handlers.move);
+                }
+                if (handlers.end) {
+                    document.removeEventListener('mouseup', handlers.end);
+                    document.removeEventListener('touchend', handlers.end);
+                }
+                handlers = { move: null, end: null };
+            };
+
+            const onStart = (e) => {
+                // Prevent if already dragging something else
+                if (dragState.isDragging && dragState.element !== element) {
+                    return;
+                }
+
+                hasMoved = false;
+                isDragMode = false;
+                const touch = e.type.includes('touch') ? e.touches[0] : e;
+                startY = touch.clientY;
+                startTop = parseInt(element.style.top);
+
+                // Long press detection for touch devices
+                if (e.type.includes('touch')) {
+                    longPressTimer = setTimeout(() => {
+                        startDrag();
+                    }, 300);
+                }
+                // For mouse, don't start drag immediately - wait for movement
+
+                // Create move/end handlers
+                handlers.move = onMove;
+                handlers.end = onEnd;
+
+                document.addEventListener('mousemove', handlers.move);
+                document.addEventListener('mouseup', handlers.end);
+                document.addEventListener('touchmove', handlers.move, { passive: false });
+                document.addEventListener('touchend', handlers.end);
+            };
+
+            const startDrag = () => {
+                isDragMode = true;
+                dragState.isDragging = true;
+                dragState.element = element;
+                dragState.aptId = aptId;
+                dragState.startY = startY;
+                dragState.startTop = startTop;
+                element.classList.add('dragging');
+            };
+
+            const onMove = (e) => {
+                const touch = e.type.includes('touch') ? e.touches[0] : e;
+                const moveDistance = Math.abs(touch.clientY - startY);
+
+                // Detect movement to start drag or cancel long press
+                if (!isDragMode) {
+                    if (moveDistance > 5) {
+                        if (e.type.includes('touch')) {
+                            hasMoved = true;
+                            clearTimeout(longPressTimer);
+                        } else {
+                            // For mouse, start dragging after movement threshold
+                            startDrag();
+                        }
+                    }
+                }
+
+                if (!dragState.isDragging || dragState.element !== element) return;
+
+                e.preventDefault();
+                const deltaY = touch.clientY - dragState.startY;
+                const newTop = dragState.startTop + deltaY;
+
+                element.style.top = `${Math.max(0, Math.min(newTop, 1440 - parseInt(element.style.height)))}px`;
+            };
+
+            const onEnd = (e) => {
+                clearTimeout(longPressTimer);
+                cleanup();
+
+                const wasDragging = dragState.isDragging && dragState.element === element;
+
+                if (wasDragging) {
+                    element.classList.remove('dragging');
+
+                    // Calculate new time based on position (60px per hour for 24 hours)
+                    const finalTop = parseInt(element.style.top);
+                    const totalMinutes = (finalTop / 60) * 60;
+                    const newHour = Math.floor(totalMinutes / 60);
+                    const newMinute = Math.round(totalMinutes % 60);
+
+                    // Snap to 15-minute intervals
+                    const snappedMinute = Math.round(newMinute / 15) * 15;
+
+                    updateAppointmentTime(aptId, newHour, snappedMinute === 60 ? 0 : snappedMinute);
+
+                    dragState.isDragging = false;
+                    dragState.element = null;
+                } else {
+                    // If not dragging, treat as click
+                    if (!hasMoved) {
+                        openAppointmentDetails(aptId);
+                    }
+                }
+
+                isDragMode = false;
+                hasMoved = false;
+            };
+
+            // Only add the initial event listeners
+            element.addEventListener('mousedown', onStart);
+            element.addEventListener('touchstart', onStart, { passive: true });
+        }
+
+        function updateAppointmentTime(aptId, hour, minute) {
+            const apt = appointments.find(a => a.id === aptId);
+            if (!apt) return;
+
+            const newDate = new Date(selectedDate);
+            newDate.setHours(hour, minute, 0, 0);
+
+            apt.date = newDate;
+
+            renderDayTimeline();
+            renderCalendar();
+            showAlert('Appointment rescheduled successfully!');
+        }
+
+        function openAppointmentDetails(aptId) {
+            console.log('Opening appointment details for ID:', aptId);
+            const apt = appointments.find(a => a.id === aptId);
+            if (!apt) {
+                console.error('Appointment not found:', aptId);
+                return;
+            }
+
+            const client = clients.find(c => c.id === apt.clientId);
+            if (!client) {
+                console.error('Client not found for appointment:', aptId);
+                return;
+            }
+
+            const aptDate = new Date(apt.date);
+            const dateStr = aptDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            const timeStr = formatTime(aptDate);
+
+            const servicesText = apt.pets.map(pet => {
+                const serviceNames = pet.items.map(item => {
+                    const svc = item.type === 'service' ?
+                        services.find(s => s.id === item.id) :
+                        items.find(i => i.id === item.id);
+                    return svc ? svc.name : '';
+                }).filter(s => s).join(', ');
+                return `${pet.name}: ${serviceNames}`;
+            }).join('<br>');
+
+            const statusColors = {
+                pending: 'var(--warning)',
+                confirmed: 'var(--accent-primary)',
+                completed: 'var(--success)',
+                cancelled: 'var(--danger)'
+            };
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="text-lg font-bold">${client.name}</div>
+                            <div class="text-xs px-3 py-1 rounded font-semibold" style="background: ${statusColors[apt.status]}; color: white; text-transform: uppercase;">${apt.status}</div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div><i class="fas fa-calendar mr-2" style="color: var(--accent-primary);"></i>${dateStr}</div>
+                            <div><i class="fas fa-clock mr-2" style="color: var(--accent-primary);"></i>${timeStr}</div>
+                            <div><i class="fas fa-paw mr-2" style="color: var(--accent-primary);"></i>${servicesText}</div>
+                            ${apt.notes ? `<div class="mt-3 pt-3 border-t" style="border-color: var(--border);"><i class="fas fa-note-sticky mr-2" style="color: var(--accent-primary);"></i>${apt.notes}</div>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                        <div class="font-semibold mb-2">Client Contact</div>
+                        <div class="space-y-2 text-sm">
+                            <div onclick="showPhoneOptions('${client.phone.replace(/'/g, "\\'")}');" class="cursor-pointer hover:text-blue-600">
+                                <i class="fas fa-phone w-4"></i> ${client.phone}
+                            </div>
+                            <div class="text-sm"><i class="fas fa-envelope w-4"></i> ${client.email}</div>
+                            <div onclick="openMaps('${client.address.replace(/'/g, "\\'")}');" class="cursor-pointer hover:text-blue-600">
+                                <i class="fas fa-location-dot w-4"></i> ${client.address}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Update Status</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="updateAppointmentStatus(${apt.id}, 'pending')" class="btn ${apt.status === 'pending' ? 'btn-primary' : 'btn-secondary'} btn-sm">
+                                <i class="fas fa-clock mr-2"></i>Pending
+                            </button>
+                            <button onclick="updateAppointmentStatus(${apt.id}, 'confirmed')" class="btn ${apt.status === 'confirmed' ? 'btn-primary' : 'btn-secondary'} btn-sm">
+                                <i class="fas fa-check mr-2"></i>Confirmed
+                            </button>
+                            <button onclick="updateAppointmentStatus(${apt.id}, 'completed')" class="btn ${apt.status === 'completed' ? 'btn-primary' : 'btn-secondary'} btn-sm">
+                                <i class="fas fa-check-double mr-2"></i>Completed
+                            </button>
+                            <button onclick="updateAppointmentStatus(${apt.id}, 'cancelled')" class="btn ${apt.status === 'cancelled' ? 'btn-primary' : 'btn-secondary'} btn-sm">
+                                <i class="fas fa-xmark mr-2"></i>Cancelled
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Close</button>
+                <button onclick="exportAppointmentToCalendar(${apt.id}); event.stopPropagation();" class="btn btn-secondary">
+                    <i class="fas fa-calendar-plus mr-2"></i>Export to Calendar
+                </button>
+                <button onclick="sendConfirmationMessage(${apt.id})" class="btn btn-primary">
+                    <i class="fas fa-message mr-2"></i>Send Confirmation
+                </button>
+            `;
+
+            showModal('Appointment Details', content, buttons);
+        }
+
+        function updateAppointmentStatus(aptId, newStatus) {
+            const apt = appointments.find(a => a.id === aptId);
+            if (!apt) return;
+
+            const oldStatus = apt.status;
+            apt.status = newStatus;
+
+            renderWeekTimeline();
+            renderCalendar();
+
+            // Close and reopen the modal to refresh
+            document.querySelector('.modal-overlay').remove();
+            openAppointmentDetails(aptId);
+
+            showAlert(`Appointment status updated to ${newStatus}!`);
+        }
+
+        function sendConfirmationMessage(aptId) {
+            const apt = appointments.find(a => a.id === aptId);
+            const client = clients.find(c => c.id === apt.clientId);
+
+            if (!client || !apt) return;
+
+            // Use the confirmation template from settings
+            const confirmationMessage = processMessageTemplate(
+                settings.messageTemplates.confirmation,
+                client,
+                apt
+            );
+
+            const cleanPhone = client.phone.replace(/\s/g, '');
+            const escapedMessage = confirmationMessage.replace(/'/g, "\\'").replace(/\n/g, '\\n');
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                        <div class="text-sm font-semibold mb-2">Send to: ${client.name}</div>
+                        <div class="text-sm mb-3" style="color: var(--text-secondary);">${client.phone}</div>
+                        <div class="text-sm whitespace-pre-wrap p-3 rounded" style="background: var(--bg-primary); border: 1px solid var(--border);">
+${confirmationMessage}
+                        </div>
+                    </div>
+                    <div class="text-xs" style="color: var(--text-tertiary);">
+                        <i class="fas fa-info-circle mr-1"></i>This will open your SMS app with the message pre-filled
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="sendBookingSMS('${cleanPhone}', '${escapedMessage}')" class="btn btn-primary">
+                    <i class="fas fa-message mr-2"></i>Send Confirmation
+                </button>
+            `;
+
+            showModal('Send Confirmation Message', content, buttons);
+        }
+
+        // Calendar Export Functions
+        function generateICS(appointment, client) {
+            const aptDate = new Date(appointment.date);
+
+            // Calculate end time based on service duration
+            const totalMinutes = appointment.pets.reduce((sum, pet) => {
+                return sum + pet.items.reduce((itemSum, item) => {
+                    const serviceOrItem = [...services, ...items].find(s => s.id === item.id && s.type === item.type);
+                    return itemSum + (serviceOrItem?.duration || 30);
+                }, 0);
+            }, 0);
+
+            const endDate = new Date(aptDate.getTime() + totalMinutes * 60000);
+
+            // Format dates for ICS (YYYYMMDDTHHMMSS)
+            const formatICSDate = (date) => {
+                const pad = (n) => n.toString().padStart(2, '0');
+                return date.getFullYear() +
+                       pad(date.getMonth() + 1) +
+                       pad(date.getDate()) + 'T' +
+                       pad(date.getHours()) +
+                       pad(date.getMinutes()) +
+                       pad(date.getSeconds());
+            };
+
+            const now = new Date();
+            const timestamp = formatICSDate(now);
+            const startTime = formatICSDate(aptDate);
+            const endTime = formatICSDate(endDate);
+
+            // Create description
+            const petsList = appointment.pets.map(pet => {
+                const serviceNames = pet.items.map(item => {
+                    const svc = item.type === 'service' ?
+                        services.find(s => s.id === item.id) :
+                        items.find(i => i.id === item.id);
+                    return svc ? svc.name : '';
+                }).filter(s => s).join(', ');
+                return `${pet.name}: ${serviceNames}`;
+            }).join('\\n');
+
+            const description = `Grooming appointment for ${client.name}\\n\\nPets:\\n${petsList}${appointment.notes ? '\\n\\nNotes: ' + appointment.notes : ''}\\n\\nClient: ${client.phone}\\n${client.address}`;
+
+            // Generate ICS content
+            const ics = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Maya Groom Pro//Appointment//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'X-WR-CALNAME:Maya Groom Pro Appointments',
+                'X-WR-TIMEZONE:' + Intl.DateTimeFormat().resolvedOptions().timeZone,
+                'BEGIN:VEVENT',
+                'UID:' + appointment.id + '@mayagroompro.app',
+                'DTSTAMP:' + timestamp,
+                'DTSTART:' + startTime,
+                'DTEND:' + endTime,
+                'SUMMARY:' + client.name + ' - Grooming Appointment',
+                'DESCRIPTION:' + description,
+                'LOCATION:' + client.address,
+                'STATUS:' + (appointment.status === 'confirmed' ? 'CONFIRMED' : 'TENTATIVE'),
+                'SEQUENCE:0',
+                'BEGIN:VALARM',
+                'TRIGGER:-PT1H',
+                'DESCRIPTION:Appointment in 1 hour',
+                'ACTION:DISPLAY',
+                'END:VALARM',
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].join('\r\n');
+
+            return ics;
+        }
+
+        function exportAppointmentToCalendar(aptId) {
+            const apt = appointments.find(a => a.id === aptId);
+            const client = clients.find(c => c.id === apt.clientId);
+
+            if (!apt || !client) {
+                showAlert('Error: Appointment or client not found');
+                return;
+            }
+
+            // Show modal with calendar options
+            showAddToCalendarModal(apt, client);
+        }
+
+        function showAddToCalendarModal(apt, client) {
+            const aptDate = new Date(apt.date);
+
+            // Calculate end time
+            const totalMinutes = apt.pets.reduce((sum, pet) => {
+                return sum + pet.items.reduce((itemSum, item) => {
+                    const serviceOrItem = [...services, ...items].find(s => s.id === item.id && s.type === item.type);
+                    return itemSum + (serviceOrItem?.duration || 30);
+                }, 0);
+            }, 0);
+            const endDate = new Date(aptDate.getTime() + totalMinutes * 60000);
+
+            // Format for display
+            const dateStr = aptDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            const timeStr = formatTime(aptDate);
+
+            // Create URLs for different calendar services
+            const googleUrl = createGoogleCalendarUrl(apt, client, aptDate, endDate);
+            const outlookUrl = createOutlookCalendarUrl(apt, client, aptDate, endDate);
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                        <div class="font-bold mb-2">${client.name}</div>
+                        <div class="text-sm mb-1"><i class="fas fa-calendar mr-2"></i>${dateStr}</div>
+                        <div class="text-sm"><i class="fas fa-clock mr-2"></i>${timeStr}</div>
+                    </div>
+
+                    <div class="text-sm font-semibold mb-2">Add to your calendar:</div>
+
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="openLink('${googleUrl}')" class="btn btn-primary w-full">
+                            <i class="fab fa-google mr-2"></i>Google Calendar
+                            <div class="text-xs opacity-75 mt-1">✨ Instant - no download</div>
+                        </button>
+                        <button onclick="openLink('${outlookUrl}')" class="btn btn-secondary w-full">
+                            <i class="fab fa-microsoft mr-2"></i>Outlook Calendar
+                            <div class="text-xs opacity-75 mt-1">✨ Instant - no download</div>
+                        </button>
+                        <button onclick="downloadICS(${apt.id})" class="btn btn-secondary w-full">
+                            <i class="fas fa-apple mr-2"></i>Apple Calendar / Other
+                            <div class="text-xs opacity-75 mt-1">📥 Downloads file</div>
+                        </button>
+                    </div>
+
+                    <div class="text-xs p-3 rounded" style="background: var(--bg-tertiary); color: var(--text-secondary);">
+                        <div class="font-semibold mb-1"><i class="fas fa-apple mr-1"></i> iPhone users:</div>
+                        1. Tap "Apple Calendar"<br>
+                        2. Save to Files<br>
+                        3. Open Files app → Tap the .ics file<br>
+                        4. Tap "Add to Calendar" → Done! ✅
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Close</button>
+            `;
+
+            showModal('Add to Calendar', content, buttons);
+        }
+
+        function createGoogleCalendarUrl(apt, client, startDate, endDate) {
+            // Format dates for Google Calendar (YYYYMMDDTHHMMSS)
+            const formatGoogleDate = (date) => {
+                const pad = (n) => n.toString().padStart(2, '0');
+                return date.getFullYear() +
+                       pad(date.getMonth() + 1) +
+                       pad(date.getDate()) + 'T' +
+                       pad(date.getHours()) +
+                       pad(date.getMinutes()) +
+                       pad(date.getSeconds());
+            };
+
+            const petsList = apt.pets.map(pet => {
+                const serviceNames = pet.items.map(item => {
+                    const svc = item.type === 'service' ?
+                        services.find(s => s.id === item.id) :
+                        items.find(i => i.id === item.id);
+                    return svc ? svc.name : '';
+                }).filter(s => s).join(', ');
+                return `${pet.name}: ${serviceNames}`;
+            }).join('\\n');
+
+            const description = `Grooming appointment\\n\\nPets:\\n${petsList}${apt.notes ? '\\n\\nNotes: ' + apt.notes : ''}\\n\\nClient Contact:\\nPhone: ${client.phone}\\nEmail: ${client.email}`;
+
+            const params = new URLSearchParams({
+                action: 'TEMPLATE',
+                text: `${client.name} - Grooming`,
+                dates: `${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`,
+                details: description,
+                location: client.address,
+                trp: 'false' // Don't show "guests can modify" option
+            });
+
+            return `https://calendar.google.com/calendar/render?${params.toString()}`;
+        }
+
+        function createOutlookCalendarUrl(apt, client, startDate, endDate) {
+            const petsList = apt.pets.map(pet => {
+                const serviceNames = pet.items.map(item => {
+                    const svc = item.type === 'service' ?
+                        services.find(s => s.id === item.id) :
+                        items.find(i => i.id === item.id);
+                    return svc ? svc.name : '';
+                }).filter(s => s).join(', ');
+                return `${pet.name}: ${serviceNames}`;
+            }).join('\\n');
+
+            const description = `Grooming appointment\\n\\nPets:\\n${petsList}${apt.notes ? '\\n\\nNotes: ' + apt.notes : ''}\\n\\nClient Contact:\\nPhone: ${client.phone}\\nEmail: ${client.email}`;
+
+            const params = new URLSearchParams({
+                path: '/calendar/action/compose',
+                rru: 'addevent',
+                subject: `${client.name} - Grooming`,
+                startdt: startDate.toISOString(),
+                enddt: endDate.toISOString(),
+                body: description,
+                location: client.address
+            });
+
+            return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
+        }
+
+        function downloadICS(aptId) {
+            const apt = appointments.find(a => a.id === aptId);
+            const client = clients.find(c => c.id === apt.clientId);
+
+            if (!apt || !client) {
+                showAlert('Error: Appointment or client not found');
+                return;
+            }
+
+            const icsContent = generateICS(apt, client);
+
+            // Create download
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `appointment-${client.name.replace(/\s/g, '_')}-${apt.date.toISOString().split('T')[0]}.ics`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            // Close the modal
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) modal.remove();
+
+            showAlert('✅ File saved! Open Files app and tap the .ics file to add to your calendar.');
+        }
+
+        function exportAllAppointments() {
+            if (appointments.length === 0) {
+                showAlert('No appointments to export');
+                return;
+            }
+
+            // Show modal with calendar options
+            showExportAllModal();
+        }
+
+        function showExportAllModal() {
+            const appointmentCount = appointments.length;
+
+            // Get date range
+            const sortedApts = [...appointments].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const firstDate = new Date(sortedApts[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const lastDate = new Date(sortedApts[sortedApts.length - 1].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+            // Create Google Calendar URL for importing
+            const googleImportUrl = 'https://calendar.google.com/calendar/r/settings/export';
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                        <div class="font-bold mb-2">${appointmentCount} Appointment${appointmentCount > 1 ? 's' : ''}</div>
+                        <div class="text-sm"><i class="fas fa-calendar-range mr-2"></i>${firstDate} - ${lastDate}</div>
+                    </div>
+
+                    <div class="text-sm font-semibold mb-2">Add to your calendar:</div>
+
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="downloadAllICS(); showGoogleImportInstructions();" class="btn btn-primary w-full">
+                            <i class="fab fa-google mr-2"></i>Google Calendar
+                            <div class="text-xs opacity-75 mt-1">📥 Download then import</div>
+                        </button>
+                        <button onclick="downloadAllICS(); showOutlookImportInstructions();" class="btn btn-secondary w-full">
+                            <i class="fab fa-microsoft mr-2"></i>Outlook Calendar
+                            <div class="text-xs opacity-75 mt-1">📥 Download then import</div>
+                        </button>
+                        <button onclick="downloadAllICS()" class="btn btn-secondary w-full">
+                            <i class="fas fa-apple mr-2"></i>Apple Calendar / Other
+                            <div class="text-xs opacity-75 mt-1">📥 Downloads file</div>
+                        </button>
+                    </div>
+
+                    <div class="text-xs p-3 rounded" style="background: var(--bg-tertiary); color: var(--text-secondary);">
+                        <div class="font-semibold mb-1"><i class="fas fa-info-circle mr-1"></i> How it works:</div>
+                        1. Download the calendar file (.ics)<br>
+                        2. Import it to your calendar app<br>
+                        3. All ${appointmentCount} appointments will be added! ✅
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Close</button>
+            `;
+
+            showModal('Export All Appointments', content, buttons);
+        }
+
+        function downloadAllICS() {
+            const now = new Date();
+            const timestamp = now.getFullYear() +
+                             (now.getMonth() + 1).toString().padStart(2, '0') +
+                             now.getDate().toString().padStart(2, '0') + 'T' +
+                             now.getHours().toString().padStart(2, '0') +
+                             now.getMinutes().toString().padStart(2, '0') +
+                             now.getSeconds().toString().padStart(2, '0');
+
+            // Build ICS with all appointments
+            let icsEvents = [];
+
+            appointments.forEach(apt => {
+                const client = clients.find(c => c.id === apt.clientId);
+                if (!client) return;
+
+                const aptDate = new Date(apt.date);
+                const totalMinutes = apt.pets.reduce((sum, pet) => {
+                    return sum + pet.items.reduce((itemSum, item) => {
+                        const serviceOrItem = [...services, ...items].find(s => s.id === item.id && s.type === item.type);
+                        return itemSum + (serviceOrItem?.duration || 30);
+                    }, 0);
+                }, 0);
+
+                const endDate = new Date(aptDate.getTime() + totalMinutes * 60000);
+
+                const formatICSDate = (date) => {
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    return date.getFullYear() +
+                           pad(date.getMonth() + 1) +
+                           pad(date.getDate()) + 'T' +
+                           pad(date.getHours()) +
+                           pad(date.getMinutes()) +
+                           pad(date.getSeconds());
+                };
+
+                const startTime = formatICSDate(aptDate);
+                const endTime = formatICSDate(endDate);
+
+                const petsList = apt.pets.map(pet => {
+                    const serviceNames = pet.items.map(item => {
+                        const svc = item.type === 'service' ?
+                            services.find(s => s.id === item.id) :
+                            items.find(i => i.id === item.id);
+                        return svc ? svc.name : '';
+                    }).filter(s => s).join(', ');
+                    return `${pet.name}: ${serviceNames}`;
+                }).join('\\n');
+
+                const description = `Grooming appointment for ${client.name}\\n\\nPets:\\n${petsList}${apt.notes ? '\\n\\nNotes: ' + apt.notes : ''}\\n\\nClient: ${client.phone}\\n${client.address}`;
+
+                icsEvents.push([
+                    'BEGIN:VEVENT',
+                    'UID:' + apt.id + '@mayagroompro.app',
+                    'DTSTAMP:' + timestamp,
+                    'DTSTART:' + startTime,
+                    'DTEND:' + endTime,
+                    'SUMMARY:' + client.name + ' - Grooming Appointment',
+                    'DESCRIPTION:' + description,
+                    'LOCATION:' + client.address,
+                    'STATUS:' + (apt.status === 'confirmed' ? 'CONFIRMED' : 'TENTATIVE'),
+                    'SEQUENCE:0',
+                    'BEGIN:VALARM',
+                    'TRIGGER:-PT1H',
+                    'DESCRIPTION:Appointment in 1 hour',
+                    'ACTION:DISPLAY',
+                    'END:VALARM',
+                    'END:VEVENT'
+                ].join('\r\n'));
+            });
+
+            const ics = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Maya Groom Pro//Appointments//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'X-WR-CALNAME:Maya Groom Pro Appointments',
+                'X-WR-TIMEZONE:' + Intl.DateTimeFormat().resolvedOptions().timeZone,
+                ...icsEvents,
+                'END:VCALENDAR'
+            ].join('\r\n');
+
+            // Create download
+            const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `maya-groom-pro-appointments-${new Date().toISOString().split('T')[0]}.ics`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showAlert(`✅ Downloaded ${appointments.length} appointment(s)!`);
+        }
+
+        function showGoogleImportInstructions() {
+            setTimeout(() => {
+                const content = `
+                    <div class="space-y-3">
+                        <div class="text-sm font-semibold mb-2">Next steps to import to Google Calendar:</div>
+                        <ol class="text-sm space-y-2 list-decimal list-inside">
+                            <li>Open <a href="https://calendar.google.com/calendar/r/settings/export" target="_blank" class="text-blue-600 underline">Google Calendar Settings</a></li>
+                            <li>Click "Import & Export" on the left</li>
+                            <li>Click "Select file from your computer"</li>
+                            <li>Choose the downloaded .ics file</li>
+                            <li>Click "Import"</li>
+                            <li>All appointments will appear! ✅</li>
+                        </ol>
+                        <div class="p-3 rounded text-xs" style="background: var(--bg-tertiary);">
+                            <i class="fas fa-mobile mr-1"></i> On iPhone: File is in Files app, follow steps above in mobile browser
+                        </div>
+                    </div>
+                `;
+                const buttons = `<button onclick="this.closest('.modal-overlay').remove()" class="btn btn-primary">Got it!</button>`;
+                showModal('Import to Google Calendar', content, buttons);
+            }, 500);
+        }
+
+        function showOutlookImportInstructions() {
+            setTimeout(() => {
+                const content = `
+                    <div class="space-y-3">
+                        <div class="text-sm font-semibold mb-2">Next steps to import to Outlook:</div>
+                        <ol class="text-sm space-y-2 list-decimal list-inside">
+                            <li>Open Outlook Calendar</li>
+                            <li>Click "File" → "Open & Export" → "Import/Export"</li>
+                            <li>Select "Import an iCalendar (.ics) file"</li>
+                            <li>Choose the downloaded .ics file</li>
+                            <li>Click "Import"</li>
+                            <li>All appointments will appear! ✅</li>
+                        </ol>
+                        <div class="p-3 rounded text-xs" style="background: var(--bg-tertiary);">
+                            <i class="fas fa-mobile mr-1"></i> On iPhone: Open file in Outlook app
+                        </div>
+                    </div>
+                `;
+                const buttons = `<button onclick="this.closest('.modal-overlay').remove()" class="btn btn-primary">Got it!</button>`;
+                showModal('Import to Outlook', content, buttons);
+            }, 500);
+        }
+
+        function exportClientToContacts(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+
+            // Generate vCard (VCF format)
+            const vcard = generateVCard(client);
+
+            // Create blob and download
+            const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${client.name.replace(/\s+/g, '_')}.vcf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            // Show instructions
+            setTimeout(() => {
+                const content = `
+                    <div class="space-y-4">
+                        <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                            <div class="font-bold mb-2">${client.name}</div>
+                            <div class="text-sm mb-1"><i class="fas fa-phone mr-2"></i>${client.phone}</div>
+                            <div class="text-sm"><i class="fas fa-envelope mr-2"></i>${client.email}</div>
+                        </div>
+
+                        <div class="text-sm font-semibold">Contact saved! 📥</div>
+
+                        <div class="p-4 rounded-lg text-sm space-y-2" style="background: var(--bg-tertiary);">
+                            <div class="font-semibold mb-2"><i class="fas fa-apple mr-2"></i>On iPhone:</div>
+                            <ol class="list-decimal list-inside space-y-1 ml-2">
+                                <li>Save file to Files app</li>
+                                <li>Open Files app</li>
+                                <li>Tap the .vcf file</li>
+                                <li>Tap "Add to Contacts"</li>
+                                <li>Done! ✅</li>
+                            </ol>
+                        </div>
+
+                        <div class="p-4 rounded-lg text-sm space-y-2" style="background: var(--bg-tertiary);">
+                            <div class="font-semibold mb-2"><i class="fab fa-android mr-2"></i>On Android:</div>
+                            <ol class="list-decimal list-inside space-y-1 ml-2">
+                                <li>Open the downloaded .vcf file</li>
+                                <li>Choose "Contacts" app</li>
+                                <li>Tap "Import"</li>
+                                <li>Done! ✅</li>
+                            </ol>
+                        </div>
+
+                        <div class="text-xs p-3 rounded" style="background: var(--bg-primary); color: var(--text-tertiary); border: 1px solid var(--border);">
+                            <i class="fas fa-info-circle mr-1"></i> The contact will include name, phone, email, and address
+                        </div>
+                    </div>
+                `;
+
+                const buttons = `<button onclick="this.closest('.modal-overlay').remove()" class="btn btn-primary">Got it!</button>`;
+                showModal('Export to Contacts', content, buttons);
+            }, 300);
+        }
+
+        function generateVCard(client) {
+            // vCard 3.0 format (widely supported)
+            let vcard = 'BEGIN:VCARD\r\n';
+            vcard += 'VERSION:3.0\r\n';
+
+            // Name
+            const nameParts = client.name.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+            vcard += `N:${lastName};${firstName};;;\r\n`;
+            vcard += `FN:${client.name}\r\n`;
+
+            // Phone
+            if (client.phone) {
+                const cleanPhone = client.phone.replace(/\s/g, '');
+                vcard += `TEL;TYPE=CELL:${cleanPhone}\r\n`;
+            }
+
+            // Email
+            if (client.email) {
+                vcard += `EMAIL;TYPE=INTERNET:${client.email}\r\n`;
+            }
+
+            // Address
+            if (client.address) {
+                // Format: ADR;TYPE=HOME:;;street;city;state;postal;country
+                vcard += `ADR;TYPE=HOME:;;${client.address};;;;\r\n`;
+            }
+
+            // Add note with pet information
+            if (client.pets && client.pets.length > 0) {
+                const petsInfo = client.pets.map(pet => {
+                    return `${pet.name} (${pet.breed}, ${pet.age} yrs)${pet.notes ? ' - ' + pet.notes : ''}`;
+                }).join('; ');
+                vcard += `NOTE:Pets: ${petsInfo}\r\n`;
+            }
+
+            // Organization
+            vcard += `ORG:${settings.businessName}\r\n`;
+
+            vcard += 'END:VCARD\r\n';
+
+            return vcard;
+        }
+
+        function previousWeek() {
+            weekStartDate.setDate(weekStartDate.getDate() - 7);
+            currentDate = new Date(weekStartDate);
+            renderWeekTimeline();
+            updateMonthYearDisplay();
+        }
+
+        function nextWeek() {
+            weekStartDate.setDate(weekStartDate.getDate() + 7);
+            currentDate = new Date(weekStartDate);
+            renderWeekTimeline();
+            updateMonthYearDisplay();
+        }
+
+        // Helper functions to open native apps
+        function openSMS(phone) {
+            const cleanPhone = phone.replace(/\s/g, '');
+            const smsUrl = `sms:${cleanPhone}`;
+
+            // Create a temporary link and click it
+            const link = document.createElement('a');
+            link.href = smsUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
+        }
+
+        function showPhoneOptions(phone) {
+            const cleanPhone = phone.replace(/\s/g, '');
+
+            const content = `
+                <div class="space-y-3">
+                    <div class="p-4 rounded-lg text-center" style="background: var(--bg-tertiary);">
+                        <div class="text-2xl font-bold mono">${phone}</div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="openLink('tel:${cleanPhone}')" class="btn btn-primary w-full">
+                            <i class="fas fa-phone mr-2"></i>Call
+                        </button>
+                        <button onclick="openLink('sms:${cleanPhone}')" class="btn btn-secondary w-full">
+                            <i class="fas fa-message mr-2"></i>Send SMS
+                        </button>
+                        <button onclick="copyToClipboard('${phone.replace(/'/g, "\\'")}'); showAlert('Phone number copied!');" class="btn btn-secondary w-full">
+                            <i class="fas fa-copy mr-2"></i>Copy Number
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+            `;
+
+            showModal('Contact', content, buttons);
+        }
+
+        function openMaps(address) {
+            const encodedAddress = encodeURIComponent(address);
+
+            const content = `
+                <div class="space-y-3">
+                    <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                        <div class="text-sm">${address}</div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="openMapApp('apple', '${encodedAddress}')" class="btn btn-primary w-full">
+                            <i class="fas fa-map mr-2"></i>Apple Maps
+                        </button>
+                        <button onclick="openMapApp('google', '${encodedAddress}')" class="btn btn-secondary w-full">
+                            <i class="fas fa-map-location-dot mr-2"></i>Google Maps
+                        </button>
+                        <button onclick="openMapApp('waze', '${encodedAddress}')" class="btn btn-secondary w-full">
+                            <i class="fas fa-route mr-2"></i>Waze
+                        </button>
+                        <button onclick="copyToClipboard('${address.replace(/'/g, "\\'")}'); showAlert('Address copied!');" class="btn btn-secondary w-full">
+                            <i class="fas fa-copy mr-2"></i>Copy Address
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+            `;
+
+            showModal('Open in Maps', content, buttons);
+        }
+
+        function processMessageTemplate(template, client, appointment) {
+            // Format date and time
+            const aptDate = new Date(appointment.date);
+            const dateStr = aptDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            const timeStr = aptDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: !settings.use24HourClock
+            });
+
+            // Get services list
+            const servicesList = appointment.pets.map(pet => {
+                const servicesText = pet.items.map(item => {
+                    if (item.type === 'service') {
+                        const svc = services.find(s => s.id === item.id);
+                        return svc ? svc.name : '';
+                    } else {
+                        const itm = items.find(i => i.id === item.id);
+                        return itm ? itm.name : '';
+                    }
+                }).filter(s => s).join(', ');
+                return `${pet.name}: ${servicesText}`;
+            }).join('\n');
+
+            const firstName = client.name.split(' ')[0];
+
+            // Replace template variables
+            return template
+                .replace(/{clientFirstName}/g, firstName)
+                .replace(/{clientName}/g, client.name)
+                .replace(/{businessName}/g, settings.businessName)
+                .replace(/{date}/g, dateStr)
+                .replace(/{time}/g, timeStr)
+                .replace(/{pets}/g, servicesList);
+        }
+
+        function sendBookingConfirmation(client, appointment) {
+            // Use the booking template from settings
+            const bookingMessage = processMessageTemplate(
+                settings.messageTemplates.booking,
+                client,
+                appointment
+            );
+
+            const cleanPhone = client.phone.replace(/\s/g, '');
+            const escapedMessage = bookingMessage.replace(/'/g, "\\'").replace(/\n/g, '\\n');
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                        <div class="text-sm font-semibold mb-2">Send to: ${client.name}</div>
+                        <div class="text-sm mb-3" style="color: var(--text-secondary);">${client.phone}</div>
+                        <div class="text-sm whitespace-pre-wrap p-3 rounded" style="background: var(--bg-primary); border: 1px solid var(--border);">
+${bookingMessage}
+                        </div>
+                    </div>
+                    <div class="text-xs" style="color: var(--text-tertiary);">
+                        <i class="fas fa-info-circle mr-1"></i>This will open your SMS app with the message pre-filled
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Skip</button>
+                <button onclick="sendBookingSMS('${cleanPhone}', '${escapedMessage}')" class="btn btn-primary">
+                    <i class="fas fa-message mr-2"></i>Send Booking Message
+                </button>
+            `;
+
+            showModal('Send Booking Confirmation', content, buttons);
+        }
+
+        function sendBookingSMS(phone, message) {
+            const decodedMessage = message.replace(/\\n/g, '\n').replace(/\\'/g, "'");
+            openLink(`sms:${phone}?&body=${encodeURIComponent(decodedMessage)}`);
+        }
+
+        function openLink(url) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+                const modal = document.querySelector('.modal-overlay');
+                if (modal) modal.remove();
+            }, 100);
+        }
+
+        function openMapApp(app, encodedAddress) {
+            let mapsUrl;
+
+            switch(app) {
+                case 'apple':
+                    // iOS Apple Maps - works on iPhone/iPad
+                    mapsUrl = `http://maps.apple.com/?q=${encodedAddress}`;
+                    break;
+                case 'google':
+                    // Google Maps - universal link that opens app if installed
+                    mapsUrl = `https://maps.google.com/?q=${encodedAddress}`;
+                    break;
+                case 'waze':
+                    // Waze deep link
+                    mapsUrl = `https://waze.com/ul?q=${encodedAddress}&navigate=yes`;
+                    break;
+            }
+
+            // Create a temporary link and click it
+            const link = document.createElement('a');
+            link.href = mapsUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+
+            setTimeout(() => {
+                document.body.removeChild(link);
+                // Close the modal
+                const modal = document.querySelector('.modal-overlay');
+                if (modal) modal.remove();
+            }, 100);
+        }
+
+        // Clients Functions
+        function renderClients() {
+            const list = document.getElementById('clientsList');
+
+            if (clients.length === 0) {
+                list.innerHTML = `
+                    <div class="col-span-full text-center py-12" style="color: var(--text-tertiary);">
+                        <i class="fas fa-users text-5xl mb-4"></i>
+                        <p class="text-lg">No clients yet</p>
+                        <p class="text-sm mt-2">Add your first client to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = clients.map(client => `
+                <div class="card card-hover">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-dark));">
+                            ${client.name.charAt(0)}
+                        </div>
+                        <button onclick="editClient(${client.id})" class="p-2 rounded-lg hover:bg-opacity-10" style="background: var(--bg-tertiary);">
+                            <i class="fas fa-ellipsis-vertical"></i>
+                        </button>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">${client.name}</h3>
+                    <div class="text-sm space-y-1 mb-3" style="color: var(--text-secondary);">
+                        <div><i class="fas fa-envelope w-4"></i> ${client.email}</div>
+                        <div onclick="showPhoneOptions('${client.phone.replace(/'/g, "\\'")}'); event.stopPropagation();" class="cursor-pointer hover:text-blue-600 transition-colors">
+                            <i class="fas fa-phone w-4"></i> ${client.phone}
+                        </div>
+                        <div onclick="openMaps('${client.address.replace(/'/g, "\\'")}'); event.stopPropagation();" class="cursor-pointer hover:text-blue-600 transition-colors">
+                            <i class="fas fa-location-dot w-4"></i> ${client.address}
+                        </div>
+                    </div>
+                    <div class="border-t pt-3" style="border-color: var(--border);">
+                        <div class="text-xs font-semibold mb-2" style="color: var(--text-tertiary);">PETS</div>
+                        ${client.pets.map(pet => `
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-paw" style="color: var(--accent-primary);"></i>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-sm">${pet.name}</div>
+                                    <div class="text-xs" style="color: var(--text-tertiary);">${pet.breed}, ${pet.age} yrs</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="border-t pt-3 mt-3 space-y-2" style="border-color: var(--border);">
+                        <button onclick="viewClientAppointments(${client.id})" class="btn btn-secondary w-full btn-sm">
+                            <i class="fas fa-calendar-days mr-2"></i>View Appointments
+                        </button>
+                        <button onclick="exportClientToContacts(${client.id})" class="btn btn-secondary w-full btn-sm">
+                            <i class="fas fa-address-card mr-2"></i>Export to Contacts
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewClientAppointments(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+
+            const clientApts = appointments.filter(apt => apt.clientId === clientId);
+            const now = new Date();
+
+            const futureApts = clientApts.filter(apt => new Date(apt.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date));
+            const pastApts = clientApts.filter(apt => new Date(apt.date) < now).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const formatAptDate = (date) => {
+                const d = new Date(date);
+                return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            };
+
+            const formatAptTime = (date) => {
+                const d = new Date(date);
+                return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: !settings.use24HourClock });
+            };
+
+            const renderAptList = (apts, title, emptyMsg) => {
+                if (apts.length === 0) {
+                    return `<p class="text-sm text-center py-4" style="color: var(--text-tertiary);">${emptyMsg}</p>`;
+                }
+                return `
+                    <div class="space-y-2 max-h-64 overflow-y-auto">
+                        ${apts.map(apt => {
+                            const servicesText = apt.pets.map(pet => {
+                                const serviceNames = pet.items.map(item => {
+                                    const svc = item.type === 'service' ?
+                                        services.find(s => s.id === item.id) :
+                                        items.find(i => i.id === item.id);
+                                    return svc ? svc.name : '';
+                                }).filter(s => s).join(', ');
+                                return `${pet.name}: ${serviceNames}`;
+                            }).join('<br>');
+
+                            const statusColors = {
+                                pending: 'var(--warning)',
+                                confirmed: 'var(--accent-primary)',
+                                completed: 'var(--success)',
+                                cancelled: 'var(--danger)'
+                            };
+
+                            return `
+                                <div class="p-3 rounded-lg cursor-pointer hover:opacity-80 transition-opacity" style="background: var(--bg-tertiary);" onclick="openAppointmentDetails(${apt.id})">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="font-semibold">${formatAptDate(apt.date)}</div>
+                                        <div class="text-xs px-2 py-1 rounded" style="background: ${statusColors[apt.status]}; color: white;">${apt.status}</div>
+                                    </div>
+                                    <div class="text-sm mb-1" style="color: var(--text-secondary);">
+                                        <i class="fas fa-clock mr-1"></i>${formatAptTime(apt.date)}
+                                    </div>
+                                    <div class="text-xs" style="color: var(--text-tertiary);">${servicesText}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            };
+
+            const content = `
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                            <i class="fas fa-calendar-plus" style="color: var(--accent-primary);"></i>
+                            Upcoming Appointments (${futureApts.length})
+                        </h3>
+                        ${renderAptList(futureApts, 'Upcoming', 'No upcoming appointments')}
+                    </div>
+                    <div class="border-t pt-4" style="border-color: var(--border);">
+                        <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                            <i class="fas fa-calendar-check" style="color: var(--text-tertiary);"></i>
+                            Past Appointments (${pastApts.length})
+                        </h3>
+                        ${renderAptList(pastApts, 'Past', 'No past appointments')}
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Close</button>
+            `;
+
+            showModal(`Appointments - ${client.name}`, content, buttons);
+        }
+
+        // Services Functions
+        function renderServices() {
+            const list = document.getElementById('servicesList');
+            const allItems = [...services, ...items];
+
+            if (allItems.length === 0) {
+                list.innerHTML = `
+                    <div class="col-span-full text-center py-12" style="color: var(--text-tertiary);">
+                        <i class="fas fa-scissors text-5xl mb-4"></i>
+                        <p class="text-lg">No services or items yet</p>
+                        <p class="text-sm mt-2">Add services and items you offer</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = allItems.map(item => {
+                const isService = item.type === 'service';
+                const priceWithGST = calculateTotalWithGST(item.price);
+
+                return `
+                    <div class="card card-hover">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(236, 72, 153, 0.1); color: var(--accent-primary);">
+                                <i class="fas fa-${isService ? 'scissors' : 'box'} text-xl"></i>
+                            </div>
+                            <button onclick="editServiceOrItem(${item.id}, '${item.type}')" class="p-2 rounded-lg hover:bg-opacity-10" style="background: var(--bg-tertiary);">
+                                <i class="fas fa-ellipsis-vertical"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <h3 class="font-bold text-lg">${item.name}</h3>
+                            <span class="badge badge-primary text-xs">${isService ? 'Service' : 'Item'}</span>
+                        </div>
+                        <p class="text-sm mb-4" style="color: var(--text-secondary);">${item.description}</p>
+                        <div class="flex justify-between items-center">
+                            ${isService ? `
+                                <span class="badge badge-primary">
+                                    <i class="fas fa-clock mr-1"></i>${item.duration} min
+                                </span>
+                            ` : '<div></div>'}
+                            <div>
+                                <div class="text-xl font-bold mono" style="color: var(--accent-primary);">$${priceWithGST.toFixed(2)}</div>
+                                ${settings.gstEnabled ? `<div class="text-xs" style="color: var(--text-tertiary);">inc. GST</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Waitlist Functions
+        function renderWaitlist() {
+            const container = document.getElementById('waitlistContainer');
+
+            if (waitlist.length === 0) {
+                container.innerHTML = `
+                    <div class="card text-center py-12" style="color: var(--text-tertiary);">
+                        <i class="fas fa-clock text-5xl mb-4"></i>
+                        <p class="text-lg">Waitlist is empty</p>
+                        <p class="text-sm mt-2">Add clients who are waiting for appointments</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = waitlist.map(item => {
+                const client = clients.find(c => c.id === item.clientId);
+                return `
+                    <div class="card mb-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="font-bold text-lg mb-2">${client?.name || 'Unknown'}</h3>
+                                <div class="text-sm mb-2" style="color: var(--text-secondary);">
+                                    <i class="fas fa-dog mr-2"></i>${item.petName}
+                                </div>
+                                <div class="text-sm mb-2" style="color: var(--text-secondary);">
+                                    <i class="fas fa-calendar mr-2"></i>Preferred: ${item.preferredDate || 'Any time'}
+                                </div>
+                                ${item.notes ? `<div class="text-sm" style="color: var(--text-tertiary);">${item.notes}</div>` : ''}
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="scheduleFromWaitlist(${item.id})" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-calendar-plus mr-2"></i>Schedule
+                                </button>
+                                <button onclick="removeFromWaitlist(${item.id})" class="btn btn-secondary btn-sm" style="color: var(--danger);">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Tab Switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+
+            event.target.classList.add('active');
+            document.getElementById(tab + 'View').classList.remove('hidden');
+        }
+
+        // Modal Functions
+        function showModal(title, content, buttons) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="p-6 border-b" style="border-color: var(--border);">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-bold">${title}</h2>
+                            <button onclick="this.closest('.modal-overlay').remove()" class="p-2 rounded-lg hover:bg-opacity-10" style="background: var(--bg-tertiary);">
+                                <i class="fas fa-xmark text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        ${content}
+                    </div>
+                    <div class="p-6 border-t flex gap-3 justify-end flex-wrap" style="border-color: var(--border);">
+                        ${buttons}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            return modal;
+        }
+
+        function openNewAppointmentModal() {
+            const allServicesAndItems = [...services, ...items];
+
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Client</label>
+                        <select id="aptClient" class="input-field" onchange="updatePetSelectionOptions()">
+                            <option value="">Select client...</option>
+                            ${clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Select Pets, Services & Items</label>
+                        <div id="petSelectionContainer" class="space-y-2">
+                            <p class="text-sm" style="color: var(--text-tertiary);">Select a client first</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Date</label>
+                        <input type="date" id="aptDate" class="input-field" value="${selectedDate.toISOString().split('T')[0]}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Time</label>
+                        <input type="time" id="aptTime" class="input-field" value="09:00">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Recurring</label>
+                        <select id="aptRecurrence" class="input-field" onchange="toggleRecurrenceOptions()">
+                            <option value="none">No recurrence</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="biweekly">Every 2 weeks</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="custom">Custom frequency</option>
+                        </select>
+                    </div>
+                    <div id="recurrenceOptions" class="hidden space-y-4">
+                        <div id="customFrequencyOptions" class="hidden">
+                            <label class="block text-sm font-semibold mb-2">Every</label>
+                            <div class="flex gap-2">
+                                <input type="number" id="aptCustomNumber" class="input-field flex-1" min="1" value="4" placeholder="4">
+                                <select id="aptCustomUnit" class="input-field flex-1">
+                                    <option value="days">Days</option>
+                                    <option value="weeks" selected>Weeks</option>
+                                    <option value="months">Months</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Repeat until</label>
+                            <input type="date" id="aptRecurrenceEnd" class="input-field">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Notes</label>
+                        <textarea id="aptNotes" class="input-field" rows="3" placeholder="Any special instructions..."></textarea>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveAppointment()" class="btn btn-primary">Create Appointment</button>
+            `;
+
+            showModal('New Appointment', content, buttons);
+        }
+
+        function updatePetSelectionOptions() {
+            const clientId = parseInt(document.getElementById('aptClient').value);
+            const client = clients.find(c => c.id === clientId);
+            const container = document.getElementById('petSelectionContainer');
+            const allServicesAndItems = [...services, ...items];
+
+            if (client && client.pets) {
+                container.innerHTML = client.pets.map((pet, petIdx) => `
+                    <div class="p-3 rounded-lg" style="background: var(--bg-tertiary);">
+                        <div class="flex items-start gap-3 mb-3">
+                            <div class="checkbox-custom" onclick="togglePetCheckbox(${petIdx})" id="petCheck${petIdx}">
+                                <i class="fas fa-check text-white text-xs" style="display: none;" id="petCheckIcon${petIdx}"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-semibold">${pet.name}</div>
+                                <div class="text-xs mb-2" style="color: var(--text-tertiary);">${pet.breed}, ${pet.age} yrs</div>
+                            </div>
+                        </div>
+                        <div id="petItems${petIdx}" class="ml-8 space-y-2" style="display: none;">
+                            <div class="text-xs font-semibold mb-2" style="color: var(--text-tertiary);">SELECT SERVICES & ITEMS</div>
+                            <div id="petItemsList${petIdx}" class="space-y-2"></div>
+                            <button onclick="addItemToPet(${petIdx})" class="btn btn-secondary btn-sm w-full">
+                                <i class="fas fa-plus mr-2"></i>Add Service/Item
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm" style="color: var(--text-tertiary);">Select a client first</p>';
+            }
+        }
+
+        function togglePetCheckbox(petIdx) {
+            const checkbox = document.getElementById(`petCheck${petIdx}`);
+            const icon = document.getElementById(`petCheckIcon${petIdx}`);
+            const itemsContainer = document.getElementById(`petItems${petIdx}`);
+
+            const isChecked = checkbox.classList.contains('checked');
+
+            if (isChecked) {
+                checkbox.classList.remove('checked');
+                icon.style.display = 'none';
+                itemsContainer.style.display = 'none';
+            } else {
+                checkbox.classList.add('checked');
+                icon.style.display = 'block';
+                itemsContainer.style.display = 'block';
+                // Add first item selector
+                if (document.getElementById(`petItemsList${petIdx}`).children.length === 0) {
+                    addItemToPet(petIdx);
+                }
+            }
+        }
+
+        let itemCounters = {};
+
+        function addItemToPet(petIdx) {
+            if (!itemCounters[petIdx]) itemCounters[petIdx] = 0;
+            const itemIdx = itemCounters[petIdx]++;
+
+            const allServicesAndItems = [...services, ...items];
+            const container = document.getElementById(`petItemsList${petIdx}`);
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'flex gap-2';
+            itemDiv.id = `petItem${petIdx}_${itemIdx}`;
+            itemDiv.innerHTML = `
+                <select class="input-field flex-1" id="petItemSelect${petIdx}_${itemIdx}">
+                    <option value="">Select service or item...</option>
+                    ${allServicesAndItems.map(s => {
+                        const priceWithGST = calculateTotalWithGST(s.price);
+                        const duration = s.duration ? ` (${s.duration}min)` : '';
+                        return `<option value="${s.id}_${s.type}">${s.name} - $${priceWithGST.toFixed(2)}${duration}</option>`;
+                    }).join('')}
+                </select>
+                <button onclick="document.getElementById('petItem${petIdx}_${itemIdx}').remove()" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(itemDiv);
+        }
+
+        function toggleRecurrenceOptions() {
+            const recurrence = document.getElementById('aptRecurrence').value;
+            const options = document.getElementById('recurrenceOptions');
+            const customOptions = document.getElementById('customFrequencyOptions');
+
+            if (recurrence !== 'none') {
+                options.classList.remove('hidden');
+                if (recurrence === 'custom') {
+                    customOptions.classList.remove('hidden');
+                } else {
+                    customOptions.classList.add('hidden');
+                }
+            } else {
+                options.classList.add('hidden');
+                customOptions.classList.add('hidden');
+            }
+        }
+
+        function saveAppointment() {
+            const clientId = parseInt(document.getElementById('aptClient').value);
+            const date = document.getElementById('aptDate').value;
+            const time = document.getElementById('aptTime').value;
+            const notes = document.getElementById('aptNotes').value;
+            const recurrence = document.getElementById('aptRecurrence').value;
+            const recurrenceEnd = document.getElementById('aptRecurrenceEnd')?.value;
+
+            if (!clientId || !date || !time) {
+                showAlert('Please fill in all required fields');
+                return;
+            }
+
+            if (recurrence !== 'none' && !recurrenceEnd) {
+                showAlert('Please select an end date for recurring appointments');
+                return;
+            }
+
+            const client = clients.find(c => c.id === clientId);
+            const selectedPets = [];
+
+            client.pets.forEach((pet, petIdx) => {
+                const checkbox = document.getElementById(`petCheck${petIdx}`);
+                if (checkbox && checkbox.classList.contains('checked')) {
+                    const itemsList = document.getElementById(`petItemsList${petIdx}`);
+                    const items = [];
+
+                    if (itemsList) {
+                        itemsList.querySelectorAll('select').forEach(select => {
+                            if (select.value) {
+                                const [id, type] = select.value.split('_');
+                                items.push({ id: parseInt(id), type });
+                            }
+                        });
+                    }
+
+                    if (items.length > 0) {
+                        selectedPets.push({ name: pet.name, items });
+                    }
+                }
+            });
+
+            if (selectedPets.length === 0) {
+                showAlert('Please select at least one pet with services/items');
+                return;
+            }
+
+            const appointmentDate = new Date(date + 'T' + time);
+
+            // Create recurring appointments
+            const appointmentsToCreate = [];
+
+            if (recurrence === 'none') {
+                appointmentsToCreate.push({
+                    id: appointments.length + appointmentsToCreate.length + 1,
+                    clientId,
+                    pets: selectedPets,
+                    date: new Date(appointmentDate),
+                    status: 'pending',
+                    notes,
+                    isRecurring: false
+                });
+            } else {
+                const endDate = new Date(recurrenceEnd);
+                let currentDate = new Date(appointmentDate);
+                let loopCount = 0;
+                const maxIterations = 365; // Safety limit
+
+                while (currentDate.getTime() <= endDate.getTime() && loopCount < maxIterations) {
+                    appointmentsToCreate.push({
+                        id: appointments.length + appointmentsToCreate.length + 1,
+                        clientId,
+                        pets: JSON.parse(JSON.stringify(selectedPets)),
+                        date: new Date(currentDate),
+                        status: 'pending',
+                        notes,
+                        isRecurring: true,
+                        recurrenceType: recurrence
+                    });
+
+                    // Increment date based on recurrence type
+                    switch (recurrence) {
+                        case 'daily':
+                            currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
+                            break;
+                        case 'weekly':
+                            currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                            break;
+                        case 'biweekly':
+                            currentDate = new Date(currentDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+                            break;
+                        case 'monthly':
+                            currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
+                            break;
+                        case 'custom':
+                            const customNumber = parseInt(document.getElementById('aptCustomNumber').value) || 1;
+                            const customUnit = document.getElementById('aptCustomUnit').value;
+                            if (customUnit === 'days') {
+                                currentDate = new Date(currentDate.getTime() + customNumber * 24 * 60 * 60 * 1000);
+                            } else if (customUnit === 'weeks') {
+                                currentDate = new Date(currentDate.getTime() + customNumber * 7 * 24 * 60 * 60 * 1000);
+                            } else if (customUnit === 'months') {
+                                currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + customNumber));
+                            }
+                            break;
+                    }
+                    loopCount++;
+                }
+            }
+
+            appointments.push(...appointmentsToCreate);
+
+            itemCounters = {};
+            document.querySelector('.modal-overlay').remove();
+            renderWeekTimeline();
+            renderCalendar();
+
+            const message = recurrence === 'none'
+                ? 'Appointment created successfully!'
+                : `${appointmentsToCreate.length} recurring appointments created successfully!`;
+            showAlert(message);
+
+            // Offer to send booking confirmation
+            if (client.phone) {
+                setTimeout(() => {
+                    sendBookingConfirmation(client, appointmentsToCreate[0]);
+                }, 500);
+            }
+        }
+
+        function openNewClientModal() {
+            // Check if Contact Picker API is supported
+            const contactsSupported = ('contacts' in navigator && 'ContactsManager' in window);
+
+            const content = `
+                <div class="space-y-4">
+                    ${contactsSupported ? `
+                    <div class="mb-4">
+                        <button onclick="importFromContacts()" class="btn btn-secondary w-full" id="importContactBtn">
+                            <i class="fas fa-address-book mr-2"></i>Import from Contacts
+                        </button>
+                        <div class="text-xs mt-1 text-center" style="color: var(--text-tertiary);">
+                            <i class="fas fa-info-circle mr-1"></i>Autofill from your phone contacts
+                        </div>
+                    </div>
+                    ` : ''}
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Client Name</label>
+                        <input type="text" id="clientName" class="input-field" placeholder="John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Email</label>
+                        <input type="email" id="clientEmail" class="input-field" placeholder="john@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Phone</label>
+                        <input type="tel" id="clientPhone" class="input-field" placeholder="0412 345 678">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Address</label>
+                        <textarea id="clientAddress" class="input-field" rows="2" placeholder="123 Main Street, Sydney NSW 2000"></textarea>
+                    </div>
+                    <div class="border-t pt-4" style="border-color: var(--border);">
+                        <label class="block text-sm font-semibold mb-2">Pet Information</label>
+                        <div id="petsContainer">
+                            <div class="pet-entry space-y-3 mb-4 p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                                <input type="text" placeholder="Pet name" class="input-field pet-name">
+                                <input type="text" placeholder="Breed" class="input-field pet-breed">
+                                <input type="number" placeholder="Age" class="input-field pet-age" min="0">
+                                <textarea placeholder="Notes (e.g., temperament, allergies)" class="input-field pet-notes" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <button onclick="addPetEntry()" class="btn btn-secondary w-full">
+                            <i class="fas fa-plus mr-2"></i>Add Another Pet
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveClient()" class="btn btn-primary">Add Client</button>
+            `;
+
+            showModal('New Client', content, buttons);
+        }
+
+        async function importFromContacts() {
+            // Check if Contact Picker API is supported
+            if (!('contacts' in navigator && 'ContactsManager' in window)) {
+                showAlert('Contact import is not supported on this device/browser. Please enter details manually.');
+                return;
+            }
+
+            try {
+                const props = ['name', 'email', 'tel', 'address'];
+                const opts = { multiple: false };
+
+                // Show loading state
+                const importBtn = document.getElementById('importContactBtn');
+                const originalText = importBtn.innerHTML;
+                importBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Opening contacts...';
+                importBtn.disabled = true;
+
+                const contacts = await navigator.contacts.select(props, opts);
+
+                if (contacts && contacts.length > 0) {
+                    const contact = contacts[0];
+
+                    // Fill in name
+                    if (contact.name && contact.name.length > 0) {
+                        const fullName = contact.name[0];
+                        document.getElementById('clientName').value = fullName;
+                    }
+
+                    // Fill in email
+                    if (contact.email && contact.email.length > 0) {
+                        document.getElementById('clientEmail').value = contact.email[0];
+                    }
+
+                    // Fill in phone
+                    if (contact.tel && contact.tel.length > 0) {
+                        document.getElementById('clientPhone').value = contact.tel[0];
+                    }
+
+                    // Fill in address
+                    if (contact.address && contact.address.length > 0) {
+                        const addr = contact.address[0];
+                        let addressParts = [];
+
+                        if (addr.addressLine && addr.addressLine.length > 0) {
+                            addressParts.push(...addr.addressLine);
+                        }
+                        if (addr.city) addressParts.push(addr.city);
+                        if (addr.region) addressParts.push(addr.region);
+                        if (addr.postalCode) addressParts.push(addr.postalCode);
+                        if (addr.country) addressParts.push(addr.country);
+
+                        const fullAddress = addressParts.join(', ');
+                        if (fullAddress) {
+                            document.getElementById('clientAddress').value = fullAddress;
+                        }
+                    }
+
+                    showAlert('Contact imported! Please review and add pet information.');
+                }
+
+                // Restore button
+                importBtn.innerHTML = originalText;
+                importBtn.disabled = false;
+
+            } catch (error) {
+                console.error('Error importing contact:', error);
+
+                // Restore button
+                const importBtn = document.getElementById('importContactBtn');
+                importBtn.innerHTML = '<i class="fas fa-address-book mr-2"></i>Import from Contacts';
+                importBtn.disabled = false;
+
+                if (error.name === 'NotAllowedError') {
+                    showAlert('Permission denied. Please allow access to contacts.');
+                } else if (error.name === 'AbortError') {
+                    // User cancelled - no need to show error
+                    console.log('Contact selection cancelled');
+                } else {
+                    showAlert('Could not import contact. Please enter details manually.');
+                }
+            }
+        }
+
+        function addPetEntry() {
+            const container = document.getElementById('petsContainer');
+            const entry = document.createElement('div');
+            entry.className = 'pet-entry space-y-3 mb-4 p-4 rounded-lg';
+            entry.style.background = 'var(--bg-tertiary)';
+            entry.innerHTML = `
+                <input type="text" placeholder="Pet name" class="input-field pet-name">
+                <input type="text" placeholder="Breed" class="input-field pet-breed">
+                <input type="number" placeholder="Age" class="input-field pet-age" min="0">
+                <textarea placeholder="Notes (e.g., temperament, allergies)" class="input-field pet-notes" rows="2"></textarea>
+            `;
+            container.appendChild(entry);
+        }
+
+        function saveClient() {
+            const name = document.getElementById('clientName').value;
+            const email = document.getElementById('clientEmail').value;
+            const phone = document.getElementById('clientPhone').value;
+            const address = document.getElementById('clientAddress').value;
+
+            if (!name || !email || !phone) {
+                showAlert('Please fill in all required fields');
+                return;
+            }
+
+            const petEntries = document.querySelectorAll('.pet-entry');
+            const pets = [];
+
+            petEntries.forEach(entry => {
+                const petName = entry.querySelector('.pet-name').value;
+                const breed = entry.querySelector('.pet-breed').value;
+                const age = parseInt(entry.querySelector('.pet-age').value) || 0;
+                const notes = entry.querySelector('.pet-notes').value;
+
+                if (petName && breed) {
+                    pets.push({ name: petName, breed, age, notes });
+                }
+            });
+
+            if (pets.length === 0) {
+                showAlert('Please add at least one pet');
+                return;
+            }
+
+            clients.push({
+                id: clients.length + 1,
+                name,
+                email,
+                phone,
+                address,
+                pets
+            });
+
+            document.querySelector('.modal-overlay').remove();
+            renderClients();
+            showAlert('Client added successfully!');
+        }
+
+        function openNewServiceModal() {
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Service Name</label>
+                        <input type="text" id="serviceName" class="input-field" placeholder="Full Grooming">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Description</label>
+                        <textarea id="serviceDescription" class="input-field" rows="3" placeholder="Bath, haircut, nail trim..."></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Duration (minutes)</label>
+                            <input type="number" id="serviceDuration" class="input-field" placeholder="60" min="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Price (excl. GST)</label>
+                            <input type="number" id="servicePrice" class="input-field" placeholder="45" min="0" step="0.01">
+                        </div>
+                    </div>
+                    ${settings.gstEnabled ? '<p class="text-xs" style="color: var(--text-tertiary);">GST will be added automatically (10%)</p>' : ''}
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveService()" class="btn btn-primary">Add Service</button>
+            `;
+
+            showModal('New Service', content, buttons);
+        }
+
+        function saveService() {
+            const name = document.getElementById('serviceName').value;
+            const description = document.getElementById('serviceDescription').value;
+            const duration = parseInt(document.getElementById('serviceDuration').value);
+            const price = parseFloat(document.getElementById('servicePrice').value);
+
+            if (!name || !description || !duration || !price) {
+                showAlert('Please fill in all fields');
+                return;
+            }
+
+            services.push({
+                id: services.length + items.length + 1,
+                name,
+                description,
+                duration,
+                price,
+                type: 'service'
+            });
+
+            document.querySelector('.modal-overlay').remove();
+            renderServices();
+            showAlert('Service added successfully!');
+        }
+
+        function openNewItemModal() {
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Item Name</label>
+                        <input type="text" id="itemName" class="input-field" placeholder="Flea Treatment">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Description</label>
+                        <textarea id="itemDescription" class="input-field" rows="3" placeholder="Premium flea & tick treatment"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Price (excl. GST)</label>
+                        <input type="number" id="itemPrice" class="input-field" placeholder="25" min="0" step="0.01">
+                    </div>
+                    ${settings.gstEnabled ? '<p class="text-xs" style="color: var(--text-tertiary);">GST will be added automatically (10%)</p>' : ''}
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveItem()" class="btn btn-primary">Add Item</button>
+            `;
+
+            showModal('New Item', content, buttons);
+        }
+
+        function saveItem() {
+            const name = document.getElementById('itemName').value;
+            const description = document.getElementById('itemDescription').value;
+            const price = parseFloat(document.getElementById('itemPrice').value);
+
+            if (!name || !description || !price) {
+                showAlert('Please fill in all fields');
+                return;
+            }
+
+            items.push({
+                id: services.length + items.length + 1,
+                name,
+                description,
+                price,
+                type: 'item'
+            });
+
+            document.querySelector('.modal-overlay').remove();
+            renderServices();
+            showAlert('Item added successfully!');
+        }
+
+        function openAddToWaitlistModal() {
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Client</label>
+                        <select id="waitlistClient" class="input-field" onchange="updateWaitlistPetOptions()">
+                            <option value="">Select client...</option>
+                            ${clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Pet</label>
+                        <select id="waitlistPet" class="input-field">
+                            <option value="">Select pet...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Preferred Date (Optional)</label>
+                        <input type="date" id="waitlistDate" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Notes</label>
+                        <textarea id="waitlistNotes" class="input-field" rows="3" placeholder="Any preferences or requirements..."></textarea>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveToWaitlist()" class="btn btn-primary">Add to Waitlist</button>
+            `;
+
+            showModal('Add to Waitlist', content, buttons);
+        }
+
+        function updateWaitlistPetOptions() {
+            const clientId = parseInt(document.getElementById('waitlistClient').value);
+            const client = clients.find(c => c.id === clientId);
+            const petSelect = document.getElementById('waitlistPet');
+
+            if (client && client.pets) {
+                petSelect.innerHTML = '<option value="">Select pet...</option>' +
+                    client.pets.map(p => `<option value="${p.name}">${p.name} (${p.breed})</option>`).join('');
+            } else {
+                petSelect.innerHTML = '<option value="">Select pet...</option>';
+            }
+        }
+
+        function saveToWaitlist() {
+            const clientId = parseInt(document.getElementById('waitlistClient').value);
+            const petName = document.getElementById('waitlistPet').value;
+            const preferredDate = document.getElementById('waitlistDate').value;
+            const notes = document.getElementById('waitlistNotes').value;
+
+            if (!clientId || !petName) {
+                showAlert('Please select client and pet');
+                return;
+            }
+
+            waitlist.push({
+                id: waitlist.length + 1,
+                clientId,
+                petName,
+                preferredDate: preferredDate || null,
+                notes,
+                addedDate: new Date()
+            });
+
+            document.querySelector('.modal-overlay').remove();
+            renderWaitlist();
+            showAlert('Added to waitlist successfully!');
+        }
+
+        function scheduleFromWaitlist(waitlistId) {
+            const item = waitlist.find(w => w.id === waitlistId);
+            if (!item) return;
+
+            // Remove from modal and open appointment modal
+            selectedDate = item.preferredDate ? new Date(item.preferredDate) : new Date();
+            openNewAppointmentModal();
+
+            // Pre-select the client
+            setTimeout(() => {
+                document.getElementById('aptClient').value = item.clientId;
+                updatePetSelectionOptions();
+            }, 100);
+        }
+
+        function removeFromWaitlist(id) {
+            showConfirm('Remove this client from the waitlist?', () => {
+                waitlist = waitlist.filter(w => w.id !== id);
+                renderWaitlist();
+            });
+        }
+
+        function viewAppointment(id) {
+            const apt = appointments.find(a => a.id === id);
+            if (!apt) return;
+
+            const client = clients.find(c => c.id === apt.clientId);
+
+            let subtotal = 0;
+            const itemizedList = apt.pets.map(pet => {
+                const petItems = pet.items.map(item => {
+                    const serviceOrItem = [...services, ...items].find(s => s.id === item.id && s.type === item.type);
+                    if (serviceOrItem) {
+                        subtotal += serviceOrItem.price;
+                        return `${serviceOrItem.name} - $${serviceOrItem.price.toFixed(2)}`;
+                    }
+                    return '';
+                }).filter(Boolean).join(', ');
+
+                return `<b>${pet.name}:</b> ${petItems}`;
+            }).join('<br>');
+
+            const gst = calculateGST(subtotal);
+            const total = subtotal + gst;
+
+            const content = `
+                <div class="space-y-4">
+                    <div class="p-4 rounded-lg" style="background: var(--bg-tertiary);">
+                        <div class="text-sm" style="color: var(--text-tertiary);">DATE & TIME</div>
+                        <div class="text-xl font-bold mono mt-1">
+                            ${apt.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        </div>
+                        <div class="text-lg mono" style="color: var(--accent-primary);">
+                            ${formatTime(apt.date)}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm font-semibold mb-2" style="color: var(--text-tertiary);">CLIENT</div>
+                        <div class="font-semibold">${client?.name || 'Unknown'}</div>
+                        <div onclick="showPhoneOptions('${(client?.phone || '').replace(/'/g, "\\'")}'); event.stopPropagation();" class="text-sm cursor-pointer hover:text-blue-600 transition-colors" style="color: var(--text-secondary);">${client?.phone || ''}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm font-semibold mb-2" style="color: var(--text-tertiary);">ADDRESS</div>
+                        <div onclick="openMaps('${(client?.address || 'No address').replace(/'/g, "\\'")}'); event.stopPropagation();" class="cursor-pointer hover:text-blue-600 transition-colors">${client?.address || 'No address'}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm font-semibold mb-2" style="color: var(--text-tertiary);">ITEMIZED SERVICES</div>
+                        <div class="p-3 rounded" style="background: var(--bg-tertiary);">
+                            ${itemizedList}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm font-semibold mb-2" style="color: var(--text-tertiary);">PRICING</div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between">
+                                <span>Subtotal:</span>
+                                <span class="mono">$${subtotal.toFixed(2)}</span>
+                            </div>
+                            ${settings.gstEnabled ? `
+                                <div class="flex justify-between text-sm" style="color: var(--text-secondary);">
+                                    <span>GST (10%):</span>
+                                    <span class="mono">$${gst.toFixed(2)}</span>
+                                </div>
+                            ` : ''}
+                            <div class="flex justify-between font-bold text-lg pt-2 border-t" style="border-color: var(--border); color: var(--accent-primary);">
+                                <span>Total:</span>
+                                <span class="mono">$${total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${apt.notes ? `
+                        <div>
+                            <div class="text-sm font-semibold mb-2" style="color: var(--text-tertiary);">NOTES</div>
+                            <div>${apt.notes}</div>
+                        </div>
+                    ` : ''}
+
+                    <div>
+                        <div class="text-sm font-semibold mb-2" style="color: var(--text-tertiary);">STATUS</div>
+                        <span class="badge ${apt.status === 'confirmed' ? 'badge-success' : apt.status === 'pending' ? 'badge-warning' : 'badge-danger'}">
+                            ${apt.status}
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="editAppointment(${id})" class="btn btn-primary btn-sm">
+                    <i class="fas fa-edit mr-2"></i>Edit
+                </button>
+                <button onclick="sendConfirmationRequest(${id})" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-paper-plane mr-2"></i>Request Confirmation
+                </button>
+                <button onclick="sendReminder(${id})" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-bell mr-2"></i>Send Reminder
+                </button>
+                <button onclick="generateInvoicePDF(${id})" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-file-pdf mr-2"></i>Generate Invoice
+                </button>
+                <button onclick="deleteAppointment(${id})" class="btn btn-secondary btn-sm" style="background: var(--danger); color: white;">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </button>
+            `;
+
+            showModal('Appointment Details', content, buttons);
+        }
+
+        // PDF Invoice Generation
+        async function generateInvoicePDF(aptId) {
+            const apt = appointments.find(a => a.id === aptId);
+            if (!apt) return;
+
+            const client = clients.find(c => c.id === apt.clientId);
+
+            showLoadingMessage('Generating PDF invoice...');
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Header
+                doc.setFontSize(20);
+                doc.setFont(undefined, 'bold');
+                doc.text(settings.businessName, 20, 20);
+
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                let yPos = 30;
+
+                if (settings.abn) {
+                    doc.text(`ABN: ${settings.abn}`, 20, yPos);
+                    yPos += 5;
+                }
+                if (settings.address) {
+                    doc.text(settings.address, 20, yPos);
+                    yPos += 5;
+                }
+                if (settings.phone) {
+                    doc.text(`Phone: ${settings.phone}`, 20, yPos);
+                    yPos += 5;
+                }
+                if (settings.email) {
+                    doc.text(`Email: ${settings.email}`, 20, yPos);
+                    yPos += 5;
+                }
+
+                // Invoice title
+                yPos += 10;
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('INVOICE', 20, yPos);
+
+                // Invoice details
+                yPos += 10;
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Invoice #: ${apt.id}`, 20, yPos);
+                yPos += 5;
+                doc.text(`Date: ${apt.date.toLocaleDateString('en-AU')}`, 20, yPos);
+                yPos += 10;
+
+                // Client details
+                doc.setFont(undefined, 'bold');
+                doc.text('Bill To:', 20, yPos);
+                yPos += 5;
+                doc.setFont(undefined, 'normal');
+                doc.text(client?.name || 'Unknown', 20, yPos);
+                yPos += 5;
+                if (client?.address) {
+                    const addressLines = doc.splitTextToSize(client.address, 80);
+                    doc.text(addressLines, 20, yPos);
+                    yPos += addressLines.length * 5;
+                }
+                if (client?.phone) {
+                    doc.text(client.phone, 20, yPos);
+                    yPos += 5;
+                }
+
+                // Line items
+                yPos += 10;
+                doc.setFont(undefined, 'bold');
+                doc.text('Description', 20, yPos);
+                doc.text('Amount', 160, yPos);
+                yPos += 5;
+                doc.line(20, yPos, 190, yPos);
+                yPos += 5;
+
+                doc.setFont(undefined, 'normal');
+                let subtotal = 0;
+
+                apt.pets.forEach(pet => {
+                    pet.items.forEach(item => {
+                        const serviceOrItem = [...services, ...items].find(s => s.id === item.id && s.type === item.type);
+                        if (serviceOrItem) {
+                            const desc = `${pet.name} - ${serviceOrItem.name}`;
+                            doc.text(desc, 20, yPos);
+                            doc.text(`$${serviceOrItem.price.toFixed(2)}`, 160, yPos);
+                            subtotal += serviceOrItem.price;
+                            yPos += 5;
+                        }
+                    });
+                });
+
+                // Totals
+                yPos += 5;
+                doc.line(20, yPos, 190, yPos);
+                yPos += 5;
+
+                doc.text('Subtotal:', 140, yPos);
+                doc.text(`$${subtotal.toFixed(2)}`, 160, yPos);
+                yPos += 5;
+
+                if (settings.gstEnabled) {
+                    const gst = calculateGST(subtotal);
+                    doc.text('GST (10%):', 140, yPos);
+                    doc.text(`$${gst.toFixed(2)}`, 160, yPos);
+                    yPos += 5;
+                }
+
+                const total = calculateTotalWithGST(subtotal);
+                doc.setFont(undefined, 'bold');
+                doc.text('Total:', 140, yPos);
+                doc.text(`$${total.toFixed(2)}`, 160, yPos);
+
+                // Footer
+                yPos += 15;
+                doc.setFontSize(9);
+                doc.setFont(undefined, 'normal');
+                doc.text('Thank you for your business!', 20, yPos);
+
+                hideLoadingMessage();
+
+                // Save PDF
+                doc.save(`Invoice_${apt.id}_${client?.name?.replace(/\s+/g, '_') || 'Client'}.pdf`);
+
+                showAlert('Invoice PDF generated and downloaded!');
+
+            } catch (err) {
+                hideLoadingMessage();
+                showAlert('Error generating PDF: ' + err.message);
+            }
+        }
+
+        // Messaging Functions
+        async function sendConfirmationRequest(aptId) {
+            const apt = appointments.find(a => a.id === aptId);
+            if (!apt) return;
+
+            const client = clients.find(c => c.id === apt.clientId);
+            const petsList = apt.pets.map(pet => pet.name).join(', ');
+            const total = calculateTotalWithGST(apt.pets.reduce((sum, pet) => {
+                return sum + pet.items.reduce((itemSum, item) => {
+                    const serviceOrItem = [...services, ...items].find(s => s.id === item.id && s.type === item.type);
+                    return itemSum + (serviceOrItem?.price || 0);
+                }, 0);
+            }, 0));
+
+            showLoadingMessage('Generating confirmation request message...');
+
+            try {
+                const prompt = `@GPT-5.1 Generate a friendly, professional appointment confirmation request text message for a mobile pet grooming business. Include:
+
+Client: ${client?.name}
+Date: ${apt.date.toLocaleDateString('en-AU', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+Time: ${formatTime(apt.date)}
+Pets: ${petsList}
+Total: $${total.toFixed(2)}
+Address: ${client?.address}
+
+The message should ask them to confirm or reschedule. Keep it concise for SMS. Be warm and professional. Only output the message text, no extra commentary.`;
+
+                await window.Poe.sendUserMessage(prompt, {
+                    handler: 'confirmationHandler',
+                    stream: true,
+                    openChat: false
+                });
+
+                window.Poe.registerHandler('confirmationHandler', (result) => {
+                    const msg = result.responses[0];
+
+                    if (msg.status === 'error') {
+                        hideLoadingMessage();
+                        showAlert('Error generating message: ' + msg.statusText);
+                    } else if (msg.status === 'complete') {
+                        hideLoadingMessage();
+                        showMessagePreview('Confirmation Request', msg.content, client?.phone);
+                    } else if (msg.status === 'incomplete') {
+                        updateLoadingMessage(msg.content);
+                    }
+                });
+
+            } catch (err) {
+                hideLoadingMessage();
+                showAlert('Error: ' + err.message);
+            }
+        }
+
+        async function sendReminder(aptId) {
+            const apt = appointments.find(a => a.id === aptId);
+            if (!apt) return;
+
+            const client = clients.find(c => c.id === apt.clientId);
+            const petsList = apt.pets.map(pet => pet.name).join(', ');
+
+            showLoadingMessage('Generating reminder message...');
+
+            try {
+                const prompt = `@GPT-5.1 Generate a friendly appointment reminder text message for a mobile pet grooming business. Include:
+
+Client: ${client?.name}
+Date: ${apt.date.toLocaleDateString('en-AU', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+Time: ${formatTime(apt.date)}
+Pets: ${petsList}
+Address: ${client?.address}
+
+Make it a friendly 24-hour reminder. Keep it concise for SMS. Only output the message text, no extra commentary.`;
+
+                await window.Poe.sendUserMessage(prompt, {
+                    handler: 'reminderHandler',
+                    stream: true,
+                    openChat: false
+                });
+
+                window.Poe.registerHandler('reminderHandler', (result) => {
+                    const msg = result.responses[0];
+
+                    if (msg.status === 'error') {
+                        hideLoadingMessage();
+                        showAlert('Error generating reminder: ' + msg.statusText);
+                    } else if (msg.status === 'complete') {
+                        hideLoadingMessage();
+                        showMessagePreview('Appointment Reminder', msg.content, client?.phone);
+                    } else if (msg.status === 'incomplete') {
+                        updateLoadingMessage(msg.content);
+                    }
+                });
+
+            } catch (err) {
+                hideLoadingMessage();
+                showAlert('Error: ' + err.message);
+            }
+        }
+
+        // Loading and Preview Functions
+        function showLoadingMessage(text) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.id = 'loadingModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <div class="p-6">
+                        <div class="text-center mb-4">
+                            <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center" style="background: rgba(236, 72, 153, 0.1);">
+                                <i class="fas fa-spinner fa-spin text-2xl" style="color: var(--accent-primary);"></i>
+                            </div>
+                        </div>
+                        <p class="text-center" id="loadingText">${text}</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function updateLoadingMessage(text) {
+            const loadingText = document.getElementById('loadingText');
+            if (loadingText) {
+                loadingText.textContent = text;
+            }
+        }
+
+        function hideLoadingMessage() {
+            const modal = document.getElementById('loadingModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function showMessagePreview(title, message, phone) {
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <div class="text-sm font-semibold mb-2" style="color: var(--text-tertiary);">TO</div>
+                        <div>${phone}</div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold mb-2" style="color: var(--text-tertiary);">MESSAGE</div>
+                        <div class="p-4 rounded-lg" style="background: var(--bg-tertiary); white-space: pre-wrap;">${message}</div>
+                    </div>
+                    <div class="text-xs" style="color: var(--text-tertiary);">
+                        <i class="fas fa-info-circle mr-1"></i>In a production app, this would be sent via SMS API
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Close</button>
+                <button onclick="copyToClipboard(\`${message.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" class="btn btn-primary">
+                    <i class="fas fa-copy mr-2"></i>Copy Message
+                </button>
+            `;
+
+            showModal(title, content, buttons);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('Message copied to clipboard!');
+            }).catch(() => {
+                showAlert('Could not copy to clipboard');
+            });
+        }
+
+        function editAppointment(id) {
+            const apt = appointments.find(a => a.id === id);
+            if (!apt) return;
+
+            const allServicesAndItems = [...services, ...items];
+
+            // Close any existing modals
+            const existingModals = document.querySelectorAll('.modal-overlay');
+            existingModals.forEach(m => m.remove());
+
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Client</label>
+                        <select id="editAptClient" class="input-field" onchange="updateEditPetSelectionOptions()">
+                            <option value="">Select client...</option>
+                            ${clients.map(c => `<option value="${c.id}" ${c.id === apt.clientId ? 'selected' : ''}>${c.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Select Pets, Services & Items</label>
+                        <div id="editPetSelectionContainer" class="space-y-2">
+                            <p class="text-sm" style="color: var(--text-tertiary);">Loading...</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Date</label>
+                        <input type="date" id="editAptDate" class="input-field" value="${apt.date.toISOString().split('T')[0]}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Time</label>
+                        <input type="time" id="editAptTime" class="input-field" value="${apt.date.toTimeString().slice(0,5)}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Status</label>
+                        <select id="editAptStatus" class="input-field">
+                            <option value="pending" ${apt.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="confirmed" ${apt.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="completed" ${apt.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="cancelled" ${apt.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Notes</label>
+                        <textarea id="editAptNotes" class="input-field" rows="3" placeholder="Any special instructions...">${apt.notes || ''}</textarea>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="updateAppointment(${id})" class="btn btn-primary">Save Changes</button>
+            `;
+
+            showModal('Edit Appointment', content, buttons);
+
+            // Initialize pet selection with current appointment data
+            setTimeout(() => {
+                updateEditPetSelectionOptions(apt);
+            }, 100);
+        }
+
+        function updateEditPetSelectionOptions(apt) {
+            const clientId = parseInt(document.getElementById('editAptClient').value);
+            const client = clients.find(c => c.id === clientId);
+            const container = document.getElementById('editPetSelectionContainer');
+            const allServicesAndItems = [...services, ...items];
+
+            if (client && client.pets) {
+                container.innerHTML = client.pets.map((pet, petIdx) => {
+                    // Check if this pet was in the original appointment
+                    const aptPet = apt ? apt.pets.find(p => p.name === pet.name) : null;
+                    const isChecked = aptPet ? true : false;
+
+                    return `
+                        <div class="p-3 rounded-lg" style="background: var(--bg-tertiary);">
+                            <div class="flex items-start gap-3 mb-3">
+                                <div class="checkbox-custom ${isChecked ? 'checked' : ''}" onclick="toggleEditPetCheckbox(${petIdx})" id="editPetCheck${petIdx}">
+                                    <i class="fas fa-check text-white text-xs" style="${isChecked ? '' : 'display: none;'}" id="editPetCheckIcon${petIdx}"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold">${pet.name}</div>
+                                    <div class="text-xs mb-2" style="color: var(--text-tertiary);">${pet.breed}, ${pet.age} yrs</div>
+                                </div>
+                            </div>
+                            <div id="editPetItems${petIdx}" class="ml-8 space-y-2" style="${isChecked ? '' : 'display: none;'}">
+                                <div class="text-xs font-semibold mb-2" style="color: var(--text-tertiary);">SELECT SERVICES & ITEMS</div>
+                                <div id="editPetItemsList${petIdx}" class="space-y-2"></div>
+                                <button onclick="addEditItemToPet(${petIdx})" class="btn btn-secondary btn-sm w-full">
+                                    <i class="fas fa-plus mr-2"></i>Add Service/Item
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Add existing items if this is an edit
+                if (apt) {
+                    client.pets.forEach((pet, petIdx) => {
+                        const aptPet = apt.pets.find(p => p.name === pet.name);
+                        if (aptPet && aptPet.items) {
+                            aptPet.items.forEach(item => {
+                                addEditItemToPet(petIdx, item.id, item.type);
+                            });
+                        }
+                    });
+                }
+            } else {
+                container.innerHTML = '<p class="text-sm" style="color: var(--text-tertiary);">Select a client first</p>';
+            }
+        }
+
+        function toggleEditPetCheckbox(petIdx) {
+            const checkbox = document.getElementById(`editPetCheck${petIdx}`);
+            const icon = document.getElementById(`editPetCheckIcon${petIdx}`);
+            const itemsContainer = document.getElementById(`editPetItems${petIdx}`);
+
+            const isChecked = checkbox.classList.contains('checked');
+
+            if (isChecked) {
+                checkbox.classList.remove('checked');
+                icon.style.display = 'none';
+                itemsContainer.style.display = 'none';
+            } else {
+                checkbox.classList.add('checked');
+                icon.style.display = 'block';
+                itemsContainer.style.display = 'block';
+                // Add first item selector if none exist
+                if (document.getElementById(`editPetItemsList${petIdx}`).children.length === 0) {
+                    addEditItemToPet(petIdx);
+                }
+            }
+        }
+
+        let editItemCounters = {};
+
+        function addEditItemToPet(petIdx, selectedId, selectedType) {
+            if (!editItemCounters[petIdx]) editItemCounters[petIdx] = 0;
+            const itemIdx = editItemCounters[petIdx]++;
+
+            const allServicesAndItems = [...services, ...items];
+            const container = document.getElementById(`editPetItemsList${petIdx}`);
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'flex gap-2';
+            itemDiv.id = `editPetItem${petIdx}_${itemIdx}`;
+            itemDiv.innerHTML = `
+                <select class="input-field flex-1" id="editPetItemSelect${petIdx}_${itemIdx}">
+                    <option value="">Select service or item...</option>
+                    ${allServicesAndItems.map(s => {
+                        const priceWithGST = calculateTotalWithGST(s.price);
+                        const duration = s.duration ? ` (${s.duration}min)` : '';
+                        const isSelected = selectedId && selectedType && s.id === selectedId && s.type === selectedType;
+                        return `<option value="${s.id}_${s.type}" ${isSelected ? 'selected' : ''}>${s.name} - $${priceWithGST.toFixed(2)}${duration}</option>`;
+                    }).join('')}
+                </select>
+                <button onclick="document.getElementById('editPetItem${petIdx}_${itemIdx}').remove()" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(itemDiv);
+        }
+
+        function updateAppointment(id) {
+            const apt = appointments.find(a => a.id === id);
+            if (!apt) return;
+
+            const clientId = parseInt(document.getElementById('editAptClient').value);
+            const date = document.getElementById('editAptDate').value;
+            const time = document.getElementById('editAptTime').value;
+            const status = document.getElementById('editAptStatus').value;
+            const notes = document.getElementById('editAptNotes').value;
+
+            if (!clientId || !date || !time) {
+                showAlert('Please fill in all required fields');
+                return;
+            }
+
+            const client = clients.find(c => c.id === clientId);
+            const selectedPets = [];
+
+            client.pets.forEach((pet, petIdx) => {
+                const checkbox = document.getElementById(`editPetCheck${petIdx}`);
+                if (checkbox && checkbox.classList.contains('checked')) {
+                    const itemsList = document.getElementById(`editPetItemsList${petIdx}`);
+                    const items = [];
+
+                    if (itemsList) {
+                        itemsList.querySelectorAll('select').forEach(select => {
+                            if (select.value) {
+                                const [itemId, type] = select.value.split('_');
+                                items.push({ id: parseInt(itemId), type });
+                            }
+                        });
+                    }
+
+                    if (items.length > 0) {
+                        selectedPets.push({ name: pet.name, items });
+                    }
+                }
+            });
+
+            if (selectedPets.length === 0) {
+                showAlert('Please select at least one pet with services/items');
+                return;
+            }
+
+            const appointmentDate = new Date(date + 'T' + time);
+
+            apt.clientId = clientId;
+            apt.pets = selectedPets;
+            apt.date = appointmentDate;
+            apt.status = status;
+            apt.notes = notes;
+
+            editItemCounters = {};
+            document.querySelector('.modal-overlay').remove();
+            renderWeekTimeline();
+            renderCalendar();
+            showAlert('Appointment updated successfully!');
+        }
+
+        function deleteAppointment(id) {
+            showConfirm('Are you sure you want to delete this appointment?', () => {
+                appointments = appointments.filter(a => a.id !== id);
+                const modals = document.querySelectorAll('.modal-overlay');
+                modals.forEach(m => m.remove());
+                renderWeekTimeline();
+                renderCalendar();
+                showAlert('Appointment deleted');
+            });
+        }
+
+        function editClient(id) {
+            const client = clients.find(c => c.id === id);
+            if (!client) return;
+
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Client Name</label>
+                        <input type="text" id="editClientName" class="input-field" value="${client.name}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Email</label>
+                        <input type="email" id="editClientEmail" class="input-field" value="${client.email}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Phone</label>
+                        <input type="tel" id="editClientPhone" class="input-field" value="${client.phone}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Address</label>
+                        <textarea id="editClientAddress" class="input-field" rows="2">${client.address}</textarea>
+                    </div>
+                    <div class="border-t pt-4" style="border-color: var(--border);">
+                        <label class="block text-sm font-semibold mb-2">Pet Information</label>
+                        <div id="editPetsContainer">
+                            ${client.pets.map((pet, idx) => `
+                                <div class="pet-entry space-y-3 mb-4 p-4 rounded-lg" style="background: var(--bg-tertiary);" data-pet-idx="${idx}">
+                                    <input type="text" placeholder="Pet name" class="input-field pet-name" value="${pet.name}">
+                                    <input type="text" placeholder="Breed" class="input-field pet-breed" value="${pet.breed}">
+                                    <input type="number" placeholder="Age" class="input-field pet-age" min="0" value="${pet.age}">
+                                    <textarea placeholder="Notes" class="input-field pet-notes" rows="2">${pet.notes || ''}</textarea>
+                                    ${client.pets.length > 1 ? `
+                                        <button onclick="removePetEntry(this)" class="btn btn-secondary btn-sm" style="color: var(--danger);">
+                                            <i class="fas fa-trash mr-2"></i>Remove Pet
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button onclick="addPetEntry()" class="btn btn-secondary w-full">
+                            <i class="fas fa-plus mr-2"></i>Add Another Pet
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="updateClient(${id})" class="btn btn-primary">Save Changes</button>
+                <button onclick="deleteClient(${id})" class="btn btn-secondary" style="background: var(--danger); color: white;">
+                    <i class="fas fa-trash mr-2"></i>Delete Client
+                </button>
+            `;
+
+            showModal('Edit Client', content, buttons);
+        }
+
+        function removePetEntry(button) {
+            button.closest('.pet-entry').remove();
+        }
+
+        function updateClient(id) {
+            const client = clients.find(c => c.id === id);
+            if (!client) return;
+
+            const name = document.getElementById('editClientName').value;
+            const email = document.getElementById('editClientEmail').value;
+            const phone = document.getElementById('editClientPhone').value;
+            const address = document.getElementById('editClientAddress').value;
+
+            if (!name || !email || !phone) {
+                showAlert('Please fill in all required fields');
+                return;
+            }
+
+            const petEntries = document.querySelectorAll('#editPetsContainer .pet-entry');
+            const pets = [];
+
+            petEntries.forEach(entry => {
+                const petName = entry.querySelector('.pet-name').value;
+                const breed = entry.querySelector('.pet-breed').value;
+                const age = parseInt(entry.querySelector('.pet-age').value) || 0;
+                const notes = entry.querySelector('.pet-notes').value;
+
+                if (petName && breed) {
+                    pets.push({ name: petName, breed, age, notes });
+                }
+            });
+
+            if (pets.length === 0) {
+                showAlert('Please add at least one pet');
+                return;
+            }
+
+            client.name = name;
+            client.email = email;
+            client.phone = phone;
+            client.address = address;
+            client.pets = pets;
+
+            document.querySelector('.modal-overlay').remove();
+            renderClients();
+            showAlert('Client updated successfully!');
+        }
+
+        function deleteClient(id) {
+            showConfirm('Are you sure you want to delete this client? This will also delete all their appointments.', () => {
+                clients = clients.filter(c => c.id !== id);
+                appointments = appointments.filter(a => a.clientId !== id);
+                waitlist = waitlist.filter(w => w.clientId !== id);
+
+                const modals = document.querySelectorAll('.modal-overlay');
+                modals.forEach(m => m.remove());
+
+                renderClients();
+                renderWeekTimeline();
+                renderCalendar();
+                renderWaitlist();
+                showAlert('Client deleted successfully');
+            });
+        }
+
+        function editServiceOrItem(id, type) {
+            const allItems = [...services, ...items];
+            const item = allItems.find(s => s.id === id && s.type === type);
+            if (!item) return;
+
+            const isService = type === 'service';
+
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">${isService ? 'Service' : 'Item'} Name</label>
+                        <input type="text" id="editItemName" class="input-field" value="${item.name}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Description</label>
+                        <textarea id="editItemDescription" class="input-field" rows="3">${item.description}</textarea>
+                    </div>
+                    ${isService ? `
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Duration (minutes)</label>
+                                <input type="number" id="editItemDuration" class="input-field" value="${item.duration}" min="1">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Price (excl. GST)</label>
+                                <input type="number" id="editItemPrice" class="input-field" value="${item.price}" min="0" step="0.01">
+                            </div>
+                        </div>
+                    ` : `
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Price (excl. GST)</label>
+                            <input type="number" id="editItemPrice" class="input-field" value="${item.price}" min="0" step="0.01">
+                        </div>
+                    `}
+                    ${settings.gstEnabled ? '<p class="text-xs" style="color: var(--text-tertiary);">GST will be added automatically (10%)</p>' : ''}
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="updateServiceOrItem(${id}, '${type}')" class="btn btn-primary">Save Changes</button>
+                <button onclick="deleteServiceOrItem(${id}, '${type}')" class="btn btn-secondary" style="background: var(--danger); color: white;">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </button>
+            `;
+
+            showModal(`Edit ${isService ? 'Service' : 'Item'}`, content, buttons);
+        }
+
+        function updateServiceOrItem(id, type) {
+            const isService = type === 'service';
+            const targetArray = isService ? services : items;
+            const item = targetArray.find(s => s.id === id && s.type === type);
+            if (!item) return;
+
+            const name = document.getElementById('editItemName').value;
+            const description = document.getElementById('editItemDescription').value;
+            const price = parseFloat(document.getElementById('editItemPrice').value);
+
+            if (!name || !description || !price) {
+                showAlert('Please fill in all fields');
+                return;
+            }
+
+            item.name = name;
+            item.description = description;
+            item.price = price;
+
+            if (isService) {
+                const duration = parseInt(document.getElementById('editItemDuration').value);
+                if (!duration) {
+                    showAlert('Please enter a valid duration');
+                    return;
+                }
+                item.duration = duration;
+            }
+
+            document.querySelector('.modal-overlay').remove();
+            renderServices();
+            showAlert(`${isService ? 'Service' : 'Item'} updated successfully!`);
+        }
+
+        function deleteServiceOrItem(id, type) {
+            const isService = type === 'service';
+            showConfirm(`Are you sure you want to delete this ${isService ? 'service' : 'item'}?`, () => {
+                if (isService) {
+                    services = services.filter(s => s.id !== id);
+                } else {
+                    items = items.filter(i => i.id !== id);
+                }
+
+                const modals = document.querySelectorAll('.modal-overlay');
+                modals.forEach(m => m.remove());
+
+                renderServices();
+                showAlert(`${isService ? 'Service' : 'Item'} deleted successfully`);
+            });
+        }
+
+        // Settings Functions
+        function openSettings() {
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="font-semibold mb-3">Business Information</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Business Name</label>
+                                <input type="text" id="settingsBusinessName" class="input-field" value="${settings.businessName}" placeholder="Your Business Name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">ABN</label>
+                                <input type="text" id="settingsABN" class="input-field" value="${settings.abn}" placeholder="12 345 678 901">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Phone</label>
+                                <input type="tel" id="settingsPhone" class="input-field" value="${settings.phone}" placeholder="0412 345 678">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Email</label>
+                                <input type="email" id="settingsEmail" class="input-field" value="${settings.email}" placeholder="info@business.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Address</label>
+                                <textarea id="settingsAddress" class="input-field" rows="2" placeholder="123 Main St, Sydney NSW 2000">${settings.address}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4" style="border-color: var(--border);">
+                        <h3 class="font-semibold mb-3">Business Logo</h3>
+                        <div class="space-y-3">
+                            <div class="p-4 rounded-lg text-center" style="background: var(--bg-tertiary);">
+                                <div id="logoPreviewContainer" class="mb-3">
+                                    ${settings.logoDataUrl ? `
+                                        <img src="${settings.logoDataUrl}" alt="Logo" class="h-20 mx-auto" style="object-fit: contain;">
+                                    ` : `
+                                        <div class="text-4xl mb-2" style="color: var(--text-tertiary);">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                        <div class="text-sm" style="color: var(--text-tertiary);">No logo uploaded</div>
+                                    `}
+                                </div>
+                                <input type="file" id="logoUploadInput" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
+                                <button onclick="document.getElementById('logoUploadInput').click()" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-upload mr-2"></i>Upload Logo
+                                </button>
+                                ${settings.logoDataUrl ? `
+                                    <button onclick="removeLogo()" class="btn btn-secondary btn-sm ml-2">
+                                        <i class="fas fa-trash mr-2"></i>Remove
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <div class="text-xs p-3 rounded" style="background: var(--bg-primary); color: var(--text-tertiary); border: 1px solid var(--border);">
+                                <i class="fas fa-info-circle mr-1"></i> Upload your business logo. Recommended: PNG with transparent background, max 2MB
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4" style="border-color: var(--border);">
+                        <h3 class="font-semibold mb-3">App Settings</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="font-semibold text-sm">24-Hour Clock</div>
+                                    <div class="text-xs" style="color: var(--text-tertiary);">Display times in 24-hour format</div>
+                                </div>
+                                <div class="checkbox-custom ${settings.use24HourClock ? 'checked' : ''}" onclick="toggleSetting('use24HourClock')" id="setting24Hour">
+                                    <i class="fas fa-check text-white text-xs" style="${settings.use24HourClock ? '' : 'display: none;'}" id="setting24HourIcon"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="font-semibold text-sm">GST Enabled</div>
+                                    <div class="text-xs" style="color: var(--text-tertiary);">Automatically add 10% GST to prices</div>
+                                </div>
+                                <div class="checkbox-custom ${settings.gstEnabled ? 'checked' : ''}" onclick="toggleSetting('gstEnabled')" id="settingGST">
+                                    <i class="fas fa-check text-white text-xs" style="${settings.gstEnabled ? '' : 'display: none;'}" id="settingGSTIcon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4" style="border-color: var(--border);">
+                        <h3 class="font-semibold mb-3">Message Templates</h3>
+                        <div class="text-xs mb-3 p-3 rounded" style="background: var(--bg-tertiary); color: var(--text-secondary);">
+                            <div class="font-semibold mb-2">Available Variables:</div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><code>{clientFirstName}</code> - Client's first name</div>
+                                <div><code>{clientName}</code> - Full client name</div>
+                                <div><code>{businessName}</code> - Your business name</div>
+                                <div><code>{date}</code> - Appointment date</div>
+                                <div><code>{time}</code> - Appointment time</div>
+                                <div><code>{pets}</code> - Pet names & services</div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">
+                                    <i class="fas fa-calendar-check mr-2" style="color: var(--accent-primary);"></i>Booking Confirmation
+                                </label>
+                                <div class="text-xs mb-2" style="color: var(--text-tertiary);">Sent immediately when appointment is created</div>
+                                <textarea id="settingsTemplateBooking" class="input-field font-mono text-sm" rows="6" placeholder="Enter booking message template...">${settings.messageTemplates.booking}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">
+                                    <i class="fas fa-check-circle mr-2" style="color: var(--success);"></i>Appointment Confirmation
+                                </label>
+                                <div class="text-xs mb-2" style="color: var(--text-tertiary);">Sent when appointment status changes to confirmed</div>
+                                <textarea id="settingsTemplateConfirmation" class="input-field font-mono text-sm" rows="6" placeholder="Enter confirmation message template...">${settings.messageTemplates.confirmation}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">
+                                    <i class="fas fa-bell mr-2" style="color: var(--warning);"></i>Appointment Reminder
+                                </label>
+                                <div class="text-xs mb-2" style="color: var(--text-tertiary);">Sent as reminder before appointment (future feature)</div>
+                                <textarea id="settingsTemplateReminder" class="input-field font-mono text-sm" rows="6" placeholder="Enter reminder message template...">${settings.messageTemplates.reminder}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const buttons = `
+                <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveSettings()" class="btn btn-primary">Save Settings</button>
+            `;
+
+            showModal('Settings', content, buttons);
+        }
+
+        function toggleSetting(setting) {
+            const checkbox = document.getElementById(`setting${setting === 'use24HourClock' ? '24Hour' : 'GST'}`);
+            const icon = document.getElementById(`setting${setting === 'use24HourClock' ? '24Hour' : 'GST'}Icon`);
+
+            const isChecked = checkbox.classList.contains('checked');
+
+            if (isChecked) {
+                checkbox.classList.remove('checked');
+                icon.style.display = 'none';
+            } else {
+                checkbox.classList.add('checked');
+                icon.style.display = 'block';
+            }
+        }
+
+        function saveSettings() {
+            settings.businessName = document.getElementById('settingsBusinessName').value;
+            settings.abn = document.getElementById('settingsABN').value;
+            settings.phone = document.getElementById('settingsPhone').value;
+            settings.email = document.getElementById('settingsEmail').value;
+            settings.address = document.getElementById('settingsAddress').value;
+            settings.use24HourClock = document.getElementById('setting24Hour').classList.contains('checked');
+            settings.gstEnabled = document.getElementById('settingGST').classList.contains('checked');
+
+            // Save message templates
+            settings.messageTemplates.booking = document.getElementById('settingsTemplateBooking').value;
+            settings.messageTemplates.confirmation = document.getElementById('settingsTemplateConfirmation').value;
+            settings.messageTemplates.reminder = document.getElementById('settingsTemplateReminder').value;
+
+            document.querySelector('.modal-overlay').remove();
+            updateHeaderLogo();
+            renderWeekTimeline();
+            renderServices();
+            showAlert('Settings saved successfully!');
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Check file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showAlert('File size must be less than 2MB');
+                return;
+            }
+
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                showAlert('Please upload an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                settings.logoDataUrl = e.target.result;
+
+                // Update preview in settings modal
+                const previewContainer = document.getElementById('logoPreviewContainer');
+                previewContainer.innerHTML = `
+                    <img src="${settings.logoDataUrl}" alt="Logo" class="h-20 mx-auto" style="object-fit: contain;">
+                `;
+
+                // Show remove button
+                const uploadButton = previewContainer.nextElementSibling.nextElementSibling;
+                uploadButton.outerHTML = `
+                    <button onclick="document.getElementById('logoUploadInput').click()" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-upload mr-2"></i>Upload Logo
+                    </button>
+                    <button onclick="removeLogo()" class="btn btn-secondary btn-sm ml-2">
+                        <i class="fas fa-trash mr-2"></i>Remove
+                    </button>
+                `;
+
+                showAlert('Logo uploaded! Click "Save Settings" to apply.');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeLogo() {
+            settings.logoDataUrl = '';
+
+            // Update preview in settings modal
+            const previewContainer = document.getElementById('logoPreviewContainer');
+            previewContainer.innerHTML = `
+                <div class="text-4xl mb-2" style="color: var(--text-tertiary);">
+                    <i class="fas fa-image"></i>
+                </div>
+                <div class="text-sm" style="color: var(--text-tertiary);">No logo uploaded</div>
+            `;
+
+            // Remove the remove button
+            const buttons = previewContainer.parentElement.querySelectorAll('button');
+            buttons[buttons.length - 1].remove();
+
+            showAlert('Logo removed! Click "Save Settings" to apply.');
+        }
+
+        function updateHeaderLogo() {
+            const headerLogo = document.getElementById('headerLogo');
+
+            if (settings.logoDataUrl) {
+                // Show uploaded logo
+                headerLogo.innerHTML = `
+                    <img src="${settings.logoDataUrl}" alt="${settings.businessName}" class="h-12" style="object-fit: contain;">
+                `;
+            } else {
+                // Show default gradient logo
+                headerLogo.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xl font-bold" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);">
+                            <i class="fas fa-paw"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-lg" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                                ${settings.businessName}
+                            </div>
+                            <div class="text-xs" style="color: var(--text-tertiary); margin-top: -2px;">
+                                Pet Grooming
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Custom Dialog Functions
+        function showAlert(message) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <div class="p-6">
+                        <div class="text-center mb-4">
+                            <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center" style="background: rgba(236, 72, 153, 0.1);">
+                                <i class="fas fa-info-circle text-2xl" style="color: var(--accent-primary);"></i>
+                            </div>
+                        </div>
+                        <p class="text-center mb-6">${message}</p>
+                        <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-primary w-full">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showConfirm(message, onConfirm) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <div class="p-6">
+                        <div class="text-center mb-4">
+                            <div class="w-12 h-12 rounded-full mx-auto flex items-center justify-center" style="background: rgba(239, 68, 68, 0.1);">
+                                <i class="fas fa-exclamation-triangle text-2xl" style="color: var(--danger);"></i>
+                            </div>
+                        </div>
+                        <p class="text-center mb-6">${message}</p>
+                        <div class="flex gap-3">
+                            <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary flex-1">Cancel</button>
+                            <button onclick="handleConfirm()" class="btn btn-primary flex-1">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            window.handleConfirm = () => {
+                modal.remove();
+                onConfirm();
+            };
+        }
+
+        // Dark Mode
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        // Initialize dark mode based on user preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Initialize app
+        initializeData();
+    </script>
+</body>
+</html>
