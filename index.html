@@ -2779,6 +2779,12 @@ Thank you for your business!
                 'Date: ' + formatDate(apt.date) + '\n\n' +
                 'Thank you for your business!';
 
+            // Store SMS data for later use
+            window.pendingSmsData = {
+                phone: cleanPhone,
+                message: smsBody
+            };
+
             // Create JPG invoice and show in modal for saving
             createInvoiceImage(apt, client, invoiceNum, function(jpgBlob, jpgDataUrl) {
                 // Show modal with image and instructions
@@ -2805,13 +2811,20 @@ Thank you for your business!
 
                 var buttons = `
                     <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Close</button>
-                    <button onclick="openSmsLink('${cleanPhone}', '${smsBody.replace(/'/g, "\\'")}'); this.closest('.modal-overlay').remove();" class="btn btn-primary">
+                    <button onclick="openPendingSms()" class="btn btn-primary">
                         <i class="fas fa-message mr-2"></i>Open SMS
                     </button>
                 `;
 
                 showModal('Save Invoice for SMS', content, buttons);
             });
+        }
+
+        function openPendingSms() {
+            if (window.pendingSmsData) {
+                document.querySelectorAll('.modal-overlay').forEach(function(m) { m.remove(); });
+                openSmsLink(window.pendingSmsData.phone, window.pendingSmsData.message);
+            }
         }
 
         function createInvoiceImage(apt, client, invoiceNum, callback) {
